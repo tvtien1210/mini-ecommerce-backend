@@ -1,0 +1,11 @@
+--CREATE TABLE create cart(
+--    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+--    user_id BIGINT NOT NULL,
+--    total_price DECIMAL(12,2),
+--    created_at LOCAL DEFAULT CURRENT_TIMESTAMP;
+--    updated_at LOCAL DEFAULT CURRENT_TIMESTAMP;
+--
+--    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE RESTRICT,
+--
+--    INDEX idx_user_id(user_id)
+--) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
