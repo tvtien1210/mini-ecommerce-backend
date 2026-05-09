@@ -49,4 +49,6 @@ build/
 .env
 
 # Application secret
-application-local.yml
+
+/Users/chantaro_it/CHANTARO BACKUP/CHANTARO_FUNIX/SPRING/EC WEB/mini-ecommerce-backend/src/main/resources/application.yml
+/Users/chantaro_it/CHANTARO BACKUP/CHANTARO_FUNIX/SPRING/EC WEB/mini-ecommerce-backend/src/main/resources/application.properties

@@ -1,6 +1,6 @@
 vnpay:
-  tmnCode: MY_TMN_CODE
-  hashSecret: YOUR_SECRET
+  tmnCode: ${VNP_TMN_CODE}
+  hashSecret: ${VNP_HASH_SECRET}
   url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
   returnUrl: http://localhost:8080/api/payment/return
   ipnUrl: http://localhost:8080/api/payment/ipn
