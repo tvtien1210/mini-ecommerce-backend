@@ -15,11 +15,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
 @Component
 @RequiredArgsConstructor
 public class VNPayUtil {
 
     private final VNPayConfig vnPayConfig;
+
     // =========================
     // 1. CREATE PAYMENT URL
     // =========================
@@ -58,6 +60,8 @@ public class VNPayUtil {
 
             // 🔥 timestamp
             params.put("vnp_CreateDate", getCurrentTime());
+
+            params.put("vnp_ExpireDate", getExpireTime());
 
             // =========================
             // SORT PARAMS
@@ -267,6 +271,12 @@ public class VNPayUtil {
                 DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
         return LocalDateTime.now().format(formatter);
+    }
+
+    private String getExpireTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+        return LocalDateTime.now().plusMinutes(15).format(formatter);
     }
 }
 

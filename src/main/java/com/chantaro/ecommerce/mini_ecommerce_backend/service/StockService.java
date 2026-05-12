@@ -4,8 +4,6 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Cart;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.CartItem;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
-import org.springframework.security.core.parameters.P;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 @Service
@@ -17,6 +15,7 @@ public class StockService {
     }
 
     //Xử lý trừ tồn kho cho toàn bộ cart
+    //Xử lý trừ tồn kho với cơ chế retry khi xảy ra optimistic locking ở method liên quan
     //Chạy trong 1 transaction (atomic: tất cả thành công hoặc rollback hết)
     @Transactional
     public void processStock(Cart cart) {

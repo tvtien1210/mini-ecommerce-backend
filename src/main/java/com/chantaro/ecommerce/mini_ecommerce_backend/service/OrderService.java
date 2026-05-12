@@ -8,6 +8,7 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.enums.OrderStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.OrderMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.*;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -457,47 +458,22 @@ public class OrderService {
         }
     }
 
-    public void cancelOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
-        if (order.getStatus() != OrderStatusCode.PENDING) {
-            throw new RuntimeException("Cannot Cancel");
-        }
-        order.setStatus(OrderStatusCode.CANCELLED);
-    }
 
     public void paidOrder(Long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
-        //Idempotency: Gọi 1 lần hay 10 lần → kết quả giống nhau
         if (order.getStatus() == OrderStatusCode.PAID) {
-            //log audit: lịch sử
             log.info("Duplicate callback for order {}", orderId);
-            //Order này đã xử lý rồi, KHÔNG làm gì nữa
             return;
         }
-
-        if (order.getStatus() != OrderStatusCode.PENDING) {
-            throw new RuntimeException("Invalid state"); // Trạng thái không hợp lệ
-        }
-
-        order.setStatus(OrderStatusCode.PAID);
+        changerStatus(order, OrderStatusCode.PAID);
     }
 
-
-    public void shipOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
-        if (order.getStatus() != OrderStatusCode.PAID) {
-            throw new RuntimeException("Must be PAID first"); // Trạng thái không hợp lệ
+    private void changerStatus(Order order, OrderStatusCode newStatus) {
+        OrderStatusCode currentStatusCode = order.getStatus();
+        if (!isValidTransition(currentStatusCode, newStatus)) {
+            throw new RuntimeException("Invalid transition from " + currentStatusCode + "to " + newStatus);
         }
-        order.setStatus(OrderStatusCode.SHIPPED);
-    }
-
-
-    public void deliveredOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
-        if (order.getStatus() != OrderStatusCode.SHIPPED) {
-            throw new RuntimeException("Must be SHIPPED first"); // Trạng thái không hợp lệ
-        }
-        order.setStatus(OrderStatusCode.DELIVERED);
+        order.setStatus(newStatus);
     }
 }
 

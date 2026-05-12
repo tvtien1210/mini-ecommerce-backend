@@ -36,21 +36,9 @@ public class OrderRestController {
         return orderService.checkoutOrder();
     }
 
-    @PostMapping("/{id}/cancel")
-    public void canceledOrder(@PathVariable Long orderId){
-        orderService.cancelOrder(orderId);
-    }
     @PostMapping("/{id}/pay")
     public void paidOrder(@PathVariable Long orderId){
         orderService.paidOrder(orderId);
-    }
-    @PostMapping("/{id}/ship")
-    public void shipedOrder(@PathVariable Long orderId){
-        orderService.shipOrder(orderId);
-    }
-    @PostMapping("/{id}/deliver")
-    public void deliveredOrder(@PathVariable Long orderId){
-        orderService.deliveredOrder(orderId);
     }
 
     @PatchMapping("/{id}/status")

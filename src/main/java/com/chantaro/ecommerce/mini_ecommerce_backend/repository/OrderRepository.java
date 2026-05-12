@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -17,4 +18,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             WHERE o.user = :user
             """)
     List<Order> findByUser(@Param("user") User user);
+
 }
