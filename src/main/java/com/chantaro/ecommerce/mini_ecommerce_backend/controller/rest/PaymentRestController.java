@@ -10,45 +10,115 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-// Đánh dấu đây là REST API controller
-// Spring sẽ tự động trả JSON/text thay vì trả về HTML page
 
-@RequestMapping("/api/payments")
+@RequestMapping("/api/payment")
 
-public class PaymentRestController {
+public class PaymentController {
 
     private final PaymentService paymentService;
 
-    // Constructor Injection
-    // Spring tự inject PaymentService vào controller
-    public PaymentRestController(PaymentService paymentService) {
+    public PaymentController(PaymentService paymentService) {
+
         this.paymentService = paymentService;
+
     }
 
-    @GetMapping("/vnpay/ipn")
-    // API nhận callback/IPN từ VNPay
-    // Full URL:
-    // /api/payments/vnpay/ipn
+    // URL VNPay redirect user về sau khi thanh toán
+
+    // Chỉ dùng để hiển thị kết quả
+
+    @GetMapping("/vnpay-return")
+
+    public ResponseEntity<?> vnPayReturn(
+
+            @RequestParam Map<String, String> params
+
+    ) {
+
+        // check chữ ký
+
+        boolean valid = paymentService.verify(params);
+
+        if (!valid) {
+
+            return ResponseEntity.badRequest()
+
+                    .body("Invalid signature");
+
+        }
+
+        String responseCode = params.get("vnp_ResponseCode");
+
+        // thanh toán thành công
+
+        if ("00".equals(responseCode)) {
+
+            return ResponseEntity.ok(
+
+                    "Thanh toán thành công"
+
+            );
+
+        }
+
+        // thanh toán thất bại
+
+        return ResponseEntity.ok(
+
+                "Thanh toán thất bại"
+
+        );
+
+    }
+
+    // VNPay server gọi vào đây để xác nhận payment
+
+    // Đây mới là nơi update DB
+
+    @GetMapping("/vnpay-ipn")
 
     public ResponseEntity<?> vnPayIPN(
 
-            // Lấy toàn bộ request params VNPay gửi về và convert thành:
-            // Map<String, String>
-            // Ví dụ:
-            // vnp_Amount=1000000
-            // vnp_ResponseCode=00
-            // =>
-            // {
-            //   "vnp_Amount" : "1000000",
-            //   "vnp_ResponseCode" : "00"
-            // }
             @RequestParam Map<String, String> params
+
     ) {
 
-        // Gọi service xử lý logic:
-        paymentService.handleVNPayIPN(params);
+        try {
 
-        // Trả response về cho VNPay
-        return ResponseEntity.ok("success");
+            // xử lý callback
+
+            paymentService.handleVNPayIPN(params);
+
+            return ResponseEntity.ok(
+
+                    Map.of(
+
+                            "RspCode", "00",
+
+                            "Message", "Confirm Success"
+
+                    )
+
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.badRequest()
+
+                    .body(
+
+                            Map.of(
+
+                                    "RspCode", "99",
+
+                                    "Message", "Unknown error"
+
+                            )
+
+                    );
+
+        }
+
     }
+
 }
