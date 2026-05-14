@@ -1,124 +1,52 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.PaymentService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
-
 @RequestMapping("/api/payment")
-
+@RequiredArgsConstructor
 public class PaymentRestController {
 
     private final PaymentService paymentService;
 
-    public PaymentRestController(PaymentService paymentService) {
-
-        this.paymentService = paymentService;
-
-    }
-
-    // URL VNPay redirect user về sau khi thanh toán
-
-    // Chỉ dùng để hiển thị kết quả
-
-    @GetMapping("/vnpay-return")
-
-    public ResponseEntity<?> vnPayReturn(
-
-            @RequestParam Map<String, String> params
-
+    // Create VNPay payment URL
+    @PostMapping("/{orderId}/vnpay")
+    public ResponseEntity<String> createPayment(
+            @PathVariable Long orderId,
+            HttpServletRequest request
     ) {
 
-        // check chữ ký
+        String paymentUrl =
+                paymentService.createPaymentUrl(orderId, request);
 
-        boolean valid = paymentService.verify(params);
-
-        if (!valid) {
-
-            return ResponseEntity.badRequest()
-
-                    .body("Invalid signature");
-
-        }
-
-        String responseCode = params.get("vnp_ResponseCode");
-
-        // thanh toán thành công
-
-        if ("00".equals(responseCode)) {
-
-            return ResponseEntity.ok(
-
-                    "Thanh toán thành công"
-
-            );
-
-        }
-
-        // thanh toán thất bại
-
-        return ResponseEntity.ok(
-
-                "Thanh toán thất bại"
-
-        );
-
+        return ResponseEntity.ok(paymentUrl);
     }
 
-    // VNPay server gọi vào đây để xác nhận payment
-
-    // Đây mới là nơi update DB
-
-    @GetMapping("/vnpay-ipn")
-
-    public ResponseEntity<?> vnPayIPN(
-
+    // User redirect after payment
+    @GetMapping("/return")
+    public ResponseEntity<String> vnPayReturn(
             @RequestParam Map<String, String> params
-
     ) {
 
-        try {
+        paymentService.handleVNPayIPN(params);
 
-            // xử lý callback
-
-            paymentService.handleVNPayIPN(params);
-
-            return ResponseEntity.ok(
-
-                    Map.of(
-
-                            "RspCode", "00",
-
-                            "Message", "Confirm Success"
-
-                    )
-
-            );
-
-        } catch (Exception e) {
-
-            return ResponseEntity.badRequest()
-
-                    .body(
-
-                            Map.of(
-
-                                    "RspCode", "99",
-
-                                    "Message", "Unknown error"
-
-                            )
-
-                    );
-
-        }
-
+        return ResponseEntity.ok("Payment processed");
     }
 
+    // VNPay server callback
+    @GetMapping("/ipn")
+    public ResponseEntity<String> vnPayIPN(
+            @RequestParam Map<String, String> params
+    ) {
+
+        paymentService.handleVNPayIPN(params);
+
+        return ResponseEntity.ok("OK");
+    }
 }

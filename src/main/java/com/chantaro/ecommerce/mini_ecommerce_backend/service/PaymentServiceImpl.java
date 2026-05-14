@@ -27,9 +27,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final ProductRepository productRepository;
     private final VNPayUtil vnPayUtil;
 
-    // =========================
     // 1. CREATE PAYMENT
-    // =========================
     @Override
     public String createPaymentUrl(Long orderId,
                                    HttpServletRequest request) {
@@ -56,9 +54,7 @@ public class PaymentServiceImpl implements PaymentService {
         );
     }
 
-    // =========================
     // 2. HANDLE IPN
-    // =========================
     @Override
     @Transactional
     public void handleVNPayIPN(Map<String, String> params) {
@@ -123,10 +119,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    // =========================
     // 3. PAYMENT FAILED
-    // =========================
-
 
     @Override
     public void handlePaymentFailed(Order order) {
@@ -139,9 +132,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    // =========================
     // 4. HANDLE TIMEOUT
-    // =========================
 
     @Override
     @Transactional
