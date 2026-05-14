@@ -13,11 +13,11 @@ import java.util.Map;
 
 @RequestMapping("/api/payment")
 
-public class PaymentController {
+public class PaymentRestController {
 
     private final PaymentService paymentService;
 
-    public PaymentController(PaymentService paymentService) {
+    public PaymentRestController(PaymentService paymentService) {
 
         this.paymentService = paymentService;
 
