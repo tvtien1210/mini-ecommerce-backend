@@ -151,5 +151,7 @@ Run:
 
 Chan Taro
 
-GitHub:
-https://github.com/tvtien1210
+## GitHub
+
+- Profile: [https://github.com/tvtien1210](https://github.com/tvtien1210)
+- Repository: [mini-ecommerce-backend](https://github.com/tvtien1210/mini-ecommerce-backend)
