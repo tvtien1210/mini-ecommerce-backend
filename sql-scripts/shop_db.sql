@@ -1,6 +1,4 @@
--- =====================================================
--- TẠO DATABASE SHOP
--- =====================================================
+-- # TẠO DATABASE SHOP
 
 -- tạo database cho hệ thống bán hàng
 CREATE DATABASE IF NOT EXISTS shop_db
@@ -12,9 +10,8 @@ USE shop_db;
 
 
 
--- =====================================================
--- BẢNG ROLE
--- =====================================================
+-- # BẢNG ROLE
+
 -- role dùng để phân quyền trong hệ thống
 -- ví dụ: CUSTOMER / STAFF / ADMIN
 
@@ -32,9 +29,8 @@ INSERT INTO roles (name, description) VALUES
 ('ROLE_ADMIN','Quản trị hệ thống');
 
 
--- =====================================================
--- BẢNG USER
--- =====================================================
+-- # BẢNG USER
+
 -- bảng lưu tài khoản đăng nhập
 
 CREATE TABLE users(
@@ -58,9 +54,8 @@ INSERT INTO users (username,password,email,full_name) VALUES
 
 
 
--- =====================================================
--- BẢNG USERS_ROLES
--- =====================================================
+-- # BẢNG USERS_ROLES
+
 -- bảng trung gian cho quan hệ MANY TO MANY
 -- user (n) ------ (n) role
 
@@ -98,9 +93,8 @@ INSERT INTO users_roles(user_id,role_id) VALUES
 
 
 
--- =====================================================
--- BẢNG CATEGORY
--- =====================================================
+-- # BẢNG CATEGORY
+
 -- category (1) ------ (n) product
 -- mỗi category có nhiều product
 
@@ -124,9 +118,8 @@ INSERT INTO category(name,description) VALUES
 
 
 
--- =====================================================
--- BẢNG PRODUCT
--- =====================================================
+-- # BẢNG PRODUCT
+
 -- Category (1) ───< (n) Product
 -- n product thuộc về 1 category
 
@@ -163,9 +156,8 @@ CREATE TABLE product(
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
 
--- =====================================================
--- BẢNG ORDERS
--- =====================================================
+-- # BẢNG ORDERS
+
 -- 1 user có nhiều order
 -- user (1) ------ (n) orders
 
@@ -198,9 +190,8 @@ CREATE TABLE orders(
 
 
 
--- =====================================================
--- BẢNG ORDER_ITEM
--- =====================================================
+-- # BẢNG ORDER_ITEM
+
 -- chi tiết sản phẩm trong đơn hàng
 
 -- 1 order ------ n order_item ------ 1 product
@@ -236,6 +227,8 @@ CREATE TABLE order_item(
 -- SET NULL
 -- Xóa order → order_id trong order_items = NULL
 
+-- # BẢNG CART
+
 CREATE TABLE cart(
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
@@ -265,6 +258,8 @@ CREATE TABLE cart(
 --	Khi INSERT → updated_at = thời điểm tạo
 --	Khi UPDATE row → updated_at tự động = thời điểm sửa
 
+-- # BẢNG CART_ITEM
+
 CREATE TABLE cart_item(
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     cart_id BIGINT NOT NULL,
@@ -289,6 +284,8 @@ CREATE TABLE cart_item(
 
 -- Thêm cột version vào bảng product
 -- ALTER TABLE product ADD COLUMN version BIGINT NOT NULL DEFAULT 0;
+
+-- # BẢNG PAYMENT
 
 CREATE TABLE payment (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
