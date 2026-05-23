@@ -1,21 +1,18 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Cart;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.CartItem;
-import com.chantaro.ecommerce.mini_ecommerce_backend.exception.UserNotFoundException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.CreateProductRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.ProductDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Category;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.ProductMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CartItemRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CategoryRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.OrderItemRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -128,7 +125,7 @@ public class ProductService {
 //    }
 
     public ProductDTO updateProduct(Long id, CreateProductRequest rq) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        Product product = productRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Category category = categoryRepository.findById(rq.getCategoryId()).orElseThrow(() -> new RuntimeException("Not found category"));
 

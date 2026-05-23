@@ -2,8 +2,6 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
 // import DTO (dữ liệu trả ra API)
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
-import com.chantaro.ecommerce.mini_ecommerce_backend.exception.UserNotFoundException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.CreateUserRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.update.UpdateUserRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.UserDTO;
@@ -11,6 +9,8 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.UserDTO;
 // import Mapper (convert Entity → DTO)
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Role;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.UserMapper;
 
 // import Repository (truy vấn DB)
@@ -20,7 +20,6 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -66,7 +65,7 @@ public class UserService {
 
                 // Nếu không tìm thấy → throw exception custom (UserNotFoundException)
                 // Lambda () -> ... chỉ được gọi khi Optional rỗng
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // Convert Entity → DTO trước khi trả ra API
         // Tránh lộ password, roles, và tránh vòng lặp JSON
@@ -94,7 +93,7 @@ public class UserService {
     }
 
     public User updateUser(Long id, UpdateUserRequest rq) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        User user = userRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         user.setUsername(rq.getUsername());
         user.setPassword(passwordEncoder.encode(rq.getPassword()));
         user.setEmail(rq.getEmail());
@@ -103,7 +102,7 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        User user = userRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
     }
 

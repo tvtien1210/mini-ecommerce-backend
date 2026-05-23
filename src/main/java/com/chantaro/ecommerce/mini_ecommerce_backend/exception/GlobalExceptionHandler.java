@@ -1,118 +1,160 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.exception;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.response.ApiResponse;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestControllerAdvice
-//Áp dụng cho tất cả controller → global exception handler
 public class GlobalExceptionHandler {
 
-    //@ExceptionHandler(UserNotFoundException.class) → nói với Spring: khi gặp UserNotFoundException, hãy chạy method này.
+    // =====================================================
+    // Business Exception Handler
+    // 業務例外処理
+    // =====================================================
 
-    // =======================
-    // Handle custom exception: UserNotFoundException
-    // =======================
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Object> handlerUserNotFoundException(UserNotFoundException ex){
-        //LinkedHashMap lưu thứ tự insert → JSON sẽ serialize theo thứ tự put vào map.
-        Map<String,Object> body = new LinkedHashMap<>();
+    // - ORDER_NOT_FOUND
+    // - OUT_OF_STOCK
+    // - INVALID_SIGNATURE
+    //
+    // 発生例:
+    // - 注文未存在
+    // - 在庫不足
+    // - 署名不正
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<?>> handleBusinessException(
+            BusinessException ex
+    ) {
 
-        // Thêm thời điểm lỗi xảy ra, giúp debug/log dễ dàng
-        body.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        // Lấy ErrorCode được lưu bên trong BusinessException
+        // BusinessException内部のErrorCode取得
+        ErrorCode errorCode = ex.getErrorCode();
 
-        // HTTP status code tương ứng: 404 Not Found, truyền value() vào field "status"
-        body.put("status", HttpStatus.NOT_FOUND.value());
+        // Trả response tương ứng với ErrorCode
+        // ErrorCodeに応じたレスポンス返却
+        return ResponseEntity
 
-        // Tên lỗi, có thể customize cho client hiển thị
-        body.put("error","Not Found 🥹");
+                // Set HTTP Status
+                // HTTPステータス設定
+                .status(errorCode.getHttpStatus())
 
-        // Thông báo chi tiết từ exception
-        body.put("message",ex.getMessage());
-
-        // ResponseEntity chứa body + HTTP status → Spring trả về client
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
-        // 🔹 Ví dụ: handle IllegalArgumentException, DataIntegrityViolationException, Exception chung...
-
-    }
-
-    // =======================
-    // Nó chứa rất nhiều thông tin dư thừa mà người dùng không cần biết, nên cần validation ex này
-    // Validation Exception Handler
-    // =======================
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    // Bắt lỗi validation từ @Valid (DTO request)
-    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex){
-
-        System.out.println("🔥 Validation handler chạy");
-        // log nhanh để debug (prod nên dùng logger thay vì System.out)
-
-        List<String> errors = ex.getBindingResult()
-                // BindingResult (kết quả validate request)
-                .getFieldErrors()
-                // lấy danh sách lỗi theo field (username, price,...)
-                .stream()
-                // stream API (xử lý collection)
-                .map(err -> err.getDefaultMessage())
-                // lấy message đã định nghĩa trong annotation (@NotNull,...)
-                .toList();
-
-        return ResponseEntity.badRequest()
-                // HTTP 400
+                // Set response body
+                // レスポンスBody設定
                 .body(
-                        Map.of(
-                                "timestamp", LocalDateTime.now()
-                                        .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-                                // thời gian xảy ra lỗi
+                        ApiResponse.error(
 
-                                "status", HttpStatus.BAD_REQUEST.value(),
-                                // mã HTTP: 400
+                                errorCode.getCode(),
 
-                                "errors", "Bad Request",
-                                // loại lỗi tổng quát
-
-                                "message", errors
-                                // danh sách lỗi chi tiết từng field
+                                errorCode.getMessage()
                         )
                 );
     }
 
-    // =======================
-    // Global Exception Handler (catch-all)
-    // =======================
-    @ExceptionHandler(Exception.class)
-    // bắt tất cả exception chưa được handle riêng
-    public ResponseEntity<Object> handlerAllException(Exception ex){
+    // =====================================================
+    // Validation Exception Handler
+    // バリデーション例外処理
+    // =====================================================
 
-        ex.printStackTrace();
-        // in stack trace để debug
+    // Ví dụ:
+    // @NotBlank
+    // @Email
+    // @Size
+    //
+    // 発生例:
+    // 必須チェック
+    // メール形式チェック
+    // 桁数チェック
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<?>> handleValidationException(
+            MethodArgumentNotValidException ex
+    ) {
 
-        Map<String,Object> body = new LinkedHashMap<>();
-        // LinkedHashMap giữ thứ tự key (đẹp JSON response)
+        // Lấy toàn bộ validation errors
+        // 全バリデーションエラー取得
+        List<String> errors = ex.getBindingResult()
 
-        body.put("timestamp",
-                LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        // thời điểm lỗi
+                // Lấy field errors
+                // フィールドエラー取得
+                .getFieldErrors()
 
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        // HTTP 500
+                // Convert sang stream để xử lý
+                // Stream変換
+                .stream()
 
-        body.put("error", "Internal Server Error");
-        // tên lỗi chuẩn
+                // Lấy message của từng validation error
+                // 各エラーメッセージ取得
+                .map(fieldError -> fieldError.getDefaultMessage())
 
-        body.put("message", ex.getMessage());
-        // message từ exception (có thể null hoặc không thân thiện user)
+                // Convert thành List<String>
+                // List<String>へ変換
+                .toList();
 
-        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
-        // trả response 500
+        return ResponseEntity
+
+                // HTTP 400 Bad Request
+                // HTTP400設定
+                .badRequest()
+
+                // Response body
+                // レスポンスBody
+                .body(
+                        ApiResponse.error(
+
+                                // Error code cho invalid request
+                                // 不正リクエストエラーコード
+                                ErrorCode.INVALID_REQUEST.getCode(),
+
+                                // Convert list error thành String
+                                // エラー一覧文字列変換
+                                errors.toString()
+                        )
+                );
     }
 
+    // =====================================================
+    // Common Exception Handler
+    // 共通例外処理
+    // =====================================================
+
+    // Ví dụ:
+    // - NullPointerException
+    // - ArithmeticException
+    // - RuntimeException
+    // - Database Exception
+    //
+    // 発生例:
+    // - NullPointerException
+    // - ゼロ除算
+    // - DBエラー
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleException(
+            Exception ex
+    ) {
+
+        // In stacktrace ra console để debug
+        // デバッグ用スタックトレース出力
+        ex.printStackTrace();
+
+        return ResponseEntity
+
+                // HTTP 500 Internal Server Error
+                // HTTP500設定
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+
+                // Response body
+                // レスポンスBody設定
+                .body(
+                        ApiResponse.error(
+
+                                ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
+
+                                ErrorCode.INTERNAL_SERVER_ERROR.getMessage()
+                        )
+                );
+    }
 }

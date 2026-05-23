@@ -8,6 +8,8 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.entity.CartItem;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.CartMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CartItemRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CartRepository;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.net.BindException;
 import java.util.Optional;
 
 @Service
@@ -47,10 +50,10 @@ public class CartService {
         // 1. Lấy user từ JWT
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException("Unauthenticated");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
         String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 2. Tìm cart ACTIVE
         // 3. Nếu null → return cart(create)
@@ -77,14 +80,14 @@ public class CartService {
         // 1. Lấy user từ SecurityContext
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException("Unauthenticated");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         // -> Nếu đang đăng nhập -> tìm username
         String username = auth.getName();
 
         // 2. Tìm user
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Not found user"));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 3. Tìm cart ACTIVE của user
         // nếu chưa có → create new cart
@@ -99,7 +102,7 @@ public class CartService {
 
 
         // 4. Tìm product
-        Product product = productRepository.findById(rq.getProductId()).orElseThrow(() -> new RuntimeException("Not found product"));
+        Product product = productRepository.findById(rq.getProductId()).orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         // 5. Check product đã và đang tồn tại trong cart, stream duyệt qua từng phần tử cartItem trong list CartItems
         // Optional: wrapper cho giá trị có thể tồn tại hoặc không, giúp tránh NullPointerException
@@ -115,7 +118,7 @@ public class CartService {
             int newQuantity = cartItem.getQuantity() + rq.getQuantity();
             //check stock
             if (product.getStock() < newQuantity) {
-                throw new RuntimeException("Out of stock");
+                throw new BusinessException(ErrorCode.OUT_OF_STOCK);
             }
             //existingItem.get() = item vừa được tìm thấy khi so sánh với rq.getProductId trong cart hiện tại
             cartItem.increaseQuantity(rq.getQuantity());
@@ -126,7 +129,7 @@ public class CartService {
 
             //check stock
             if (product.getStock() < rq.getQuantity()) {
-                throw new RuntimeException("Out of stock");
+                throw new BusinessException(ErrorCode.OUT_OF_STOCK);
             }
 
             //tao moi CartItem
@@ -159,16 +162,16 @@ public class CartService {
     @Transactional
     public CartDTO updateCartItem(Long id, UpdateCartItemRequest rq) {
         // 1. Tìm cartItem
-        CartItem cartItem = cartItemRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found cart item"));
+        CartItem cartItem = cartItemRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
 
         // 2. Check item này thuộc user hiện tại đang đăng nhập hay không (security)
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException("Unauthenticated");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Not found user by username = " + username));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // Lấy cart
         Cart cart = cartItem.getCart();
@@ -177,18 +180,18 @@ public class CartService {
         //403 Forbidden: Hệ thống biết bạn là ai,  nhưng bạn không có quyền truy cập vào tài nguyên đó
 
         if (!cart.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new BusinessException(ErrorCode.FORBIDDEN); // khong co quyen truy cap tai nguyen
         }
 
         // 3. Validate quantity > 0
         // @Valid ở controller rồi nhưng chưa đủ chặt, làm thêm cho chắc
         if (rq.getQuantity() <= 0) {
-            throw new RuntimeException("quantity must be > 0");
+            throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         }
 
         // 4. Check stock, số lượng update quantity không được vượt quá stock
         if (cartItem.getProduct().getStock() < rq.getQuantity()) {
-            throw new RuntimeException("Out of stock");
+            throw new BusinessException(ErrorCode.OUT_OF_STOCK);
         }
 
         // 5. Update quantity
@@ -216,7 +219,7 @@ public class CartService {
         // 1. Lấy CartItem từ DB theo id
         // Nếu không tồn tại → throw exception
         CartItem cartItem = cartItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Not found cart item"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
 
         // 2. Lấy thông tin user hiện tại từ SecurityContext
         // (user đã được authenticate trước đó)
@@ -225,7 +228,7 @@ public class CartService {
         // 3. Tìm user trong DB
         // Nếu không tồn tại → throw exception
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Not found user"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 4. Lấy Cart chứa CartItem này
         Cart cart = cartItem.getCart();
@@ -233,7 +236,7 @@ public class CartService {
         // 5. Kiểm tra quyền sở hữu
         // Đảm bảo CartItem thuộc về đúng user hiện tại
         if (!cart.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+            throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
         // 6. Xoá CartItem khỏi database, dùng helper method trong cart
