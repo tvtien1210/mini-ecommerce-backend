@@ -4,7 +4,9 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.dto.order.OrderDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.orderstatus.UpdateOrderStatusRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.OrderStatusCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.OrderMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +24,12 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j // tạo logger
+// ログ出力用アノテーション
 @Service
+// 注文関連サービス
 public class OrderService {
+
+    // Repository層
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -32,6 +38,7 @@ public class OrderService {
     private final StockService stockService;
 
     @Autowired
+    // コンストラクタインジェクション
     public OrderService(CartRepository cartRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, StockService stockService) {
         this.cartRepository = cartRepository;
         this.orderRepository = orderRepository;
@@ -44,347 +51,376 @@ public class OrderService {
 
     public List<OrderDTO> getAllOrders() {
 
-        return orderRepository.findAll().stream().map(order -> OrderMapper.toDTO(order)).toList();
+        // 全注文一覧取得
+        return orderRepository.findAll().stream()
+                .map(order -> OrderMapper.toDTO(order))
+                .toList();
     }
 
     public OrderDTO getOrderById(Long id) {
+
         //	findById(id) → Optional<Order>
         //	orElseThrow(...) → trích giá trị bên trong Optional
         //  Kết quả cuối cùng là: Order
-        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found by id"));
+
+        // 注文ID検索
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
         // Mapper KHÔNG nên xử lý Optional
+        // DTO変換
         return OrderMapper.toDTO(order);
-
-        /* return OrderMapper.toDTO(orderRepository.findById(id))->Sai kiểu
-        findById() KHÔNG trả về Order, nó trả về Optional<Order>
-        Cách fix: // Mapper KHÔNG nên xử lý Optional, mapper xử lý Order order
-
-        Or làm theo cách sau
-        return orderRepository.findById(id)
-                .map(order -> OrderMapper.toDTO(order))
-                .orElseThrow(() -> new RuntimeException("Order not found"));*/
     }
-
-
-//    @Transactional
-//    public OrderDTO createOrder(CreateOrderRequest rq) {
-//
-//        // ===== 1. Lấy user đang login =====
-//        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-//
-//        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Not found user by username: " + username));
-//
-//        // ===== 2. Tạo Order =====
-//        Order order = new Order();
-//
-//        // set user cho order
-//        order.setUser(user);
-//
-//
-//        // dùng bảng order_status
-//        OrderStatus pending = orderStatusRepository.findByCode(OrderStatusCode.PENDING).orElseThrow(() -> new RuntimeException("Status not found"));
-//
-//        // set status cho order
-//        order.setOrderStatus(pending);
-//
-//
-//        // QUAN TRỌNG 🍺
-//
-//        // ===== 3. Loop items =====
-//        for (CreateOrderItemRequest orderItemRequest : rq.getOrderItems()) {
-//
-//            // 3.1 Lấy product
-//            Product product = productRepository.findById(orderItemRequest.getProductId()).orElseThrow(() -> new RuntimeException("Not found product by id:" + orderItemRequest.getProductId()));
-//
-//            // 3.2 Check stock
-//            if (product.getStock() < orderItemRequest.getQuantity()) {
-//                throw new RuntimeException("Out of stock");
-//            }
-//
-//            // 3.3 Trừ stock
-//            product.setStock(product.getStock() - orderItemRequest.getQuantity());
-//
-//
-//            // 3.4 Tạo OrderItem
-//            OrderItem item = new OrderItem();
-//
-//
-//            // set product
-//            item.setProduct(product);
-//
-//
-//            // set quantity
-//            item.setQuantity(orderItemRequest.getQuantity());
-//
-//
-//            // set price
-//            item.setPrice(product.getPrice()); //snapshot price từ product gốc tại thời điểm click, không thay đổi nếu bị cập nhật mới
-//
-//
-//            // 3.5 Add vào Order dùng Helper
-//            order.addItem(item);
-//
-//        }
-//
-//        // ===== 6. Return DTO =====
-//        return OrderMapper.toDTO(orderRepository.save(order));
-//    }
-
 
     public List<OrderDTO> getMyOrders() {
 
         // Lấy thông tin authentication hiện tại từ SecurityContext
+        // Spring Security認証情報取得
+
         // (được set sau khi user login thành công qua Spring Security)
+        // ログイン済みユーザー情報
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         // check chưa đăng nhập hoặc authentication không hợp lệ
+        // 未認証チェック
         if (auth == null || !auth.isAuthenticated()) {
-            // ⚠️ nên dùng custom exception (vd: UnauthorizedException)
-            // thay vì RuntimeException
-            throw new RuntimeException("Unauthenticated");
+
+            // ⚠️ nên dùng custom exception
+            // カスタム例外推奨
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         // username (principal) của user đang login
+        // ログインユーザー名取得
         String username = auth.getName();
 
         // query DB để lấy user theo username
+        // DBからユーザー取得
+
         // orElseThrow: nếu không tìm thấy → ném exception
+        // 未存在時例外発生
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found by username: " + username));
+                        new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // Viết gọn lại code dưới dùng Stream API, phải tạo list orders trước bằng orderRepository.findByUser(user)
-        return orderRepository.findByUser(user).stream().map(order -> OrderMapper.toDTO(order)).toList();
+        // Viết gọn lại code dưới dùng Stream API
+        // Stream API利用
+        return orderRepository.findByUser(user).stream()
+                .map(order -> OrderMapper.toDTO(order))
+                .toList();
     }
 
-    // Một user (or một user.id) có nhiều orders
-//        // → query tất cả orders thuộc về user này
-//        List<Order>code orders = orderRepository.findByUser(user);
-//
-//        // chuẩn bị list kết quả trả về cho API
-//        List<OrderDTO> result = new ArrayList<>();
-//
-//        // loop từng order để convert sang DTO
-//        for (Order order : orders) {
-//
-//            // map entity → DTO (tránh expose entity ra ngoài API)
-//            // DTO giúp:
-//            // - bảo mật dữ liệu (không lộ field nhạy cảm)
-//            // - control response format
-//            OrderDTO dto = OrderMapper.toDTO(order);
-//
-//            result.add(dto);
-//        }
-//
-//        // return danh sách order của user hiện tại
-//        return result;
-
     @Transactional
+    // トランザクション制御
     @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
+    // 管理者またはスタッフのみ実行可能
     public OrderDTO updateOrderStatus(Long id, UpdateOrderStatusRequest rq) {
 
         //Tìm order by id
-        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found order"));
+        // 注文取得
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        //Tim status by code (query du lieu da duoc luu trong database)
-        //Chú ý: nếu viết order.getOrderStatus().setCode(rq.getStatusCode()); //Toàn bộ order đang PENDING → thành SHIPPED 😱 DAME!
+        //Tim status by code
+        // ステータスコード取得
+
+        //query du lieu da duoc luu trong database
+        // DB保存済みステータス
+
+        //Chú ý:
+        // 注意：
+
+        // nếu viết order.getOrderStatus().setCode(rq.getStatusCode());
+        // 直接変更禁止
+
+        //Toàn bộ order đang PENDING → thành SHIPPED 😱 DAME!
+        // 全注文ステータス破壊リスク
+
         OrderStatusCode newOrderStatus = rq.getStatusCode();
 
-        //Status code hiện tại của order hiện tại VD:
+        //Status code hiện tại của order hiện tại
+        // 現在ステータス取得
         if (order.getStatus() == null) {
-            throw new RuntimeException("Current order has no status");
+
+            // ステータス未設定エラー
+            throw new BusinessException(ErrorCode.ORDER_STATUS_MISSING);
         }
+
         OrderStatusCode currentOrderStatusCode = order.getStatus();
 
         //Không cập nhật nếu trùng statusCode
-        //Enum dùng == luôn cho nhanh
-        if (currentOrderStatusCode == rq.getStatusCode()) {
-            throw new RuntimeException("The status is already the same.");
-        }
+        // 同一ステータス更新禁止
 
+        //Enum dùng == luôn cho nhanh
+        // Enum比較は==使用可能
+        if (currentOrderStatusCode == rq.getStatusCode()) {
+            throw new BusinessException(ErrorCode.ORDER_STATUS_ALREADY_SET);
+        }
 
         //Không thoả mãn điều kiện chỉ cập nhật from A to B thì throw new exception
+        // 不正ステータス遷移チェック
         if (!isValidTransition(currentOrderStatusCode, rq.getStatusCode())) {
-            throw new RuntimeException("Invalid status transition from " + currentOrderStatusCode + " to " + rq.getStatusCode());
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS_TRANSITION);
         }
 
+        //Cap nhat status
+        // ステータス更新
 
-        //Cap nhat status, n order tham chieu den 1 status (status_id), giong nhu n order tham chieu den 1 user (user_id)
-        //orderStatus se bao gom cac field dang ton tai trong class OrderStatus, vi du code + name
+        // n order tham chieu den 1 status (status_id)
+        // 複数注文が1ステータス参照
+
+        //orderStatus se bao gom cac field dang ton tai trong class OrderStatus
+        // OrderStatusエンティティ参照
+
         order.setStatus(newOrderStatus);
+
+        // 保存してDTO返却
         return OrderMapper.toDTO(orderRepository.save(order));
     }
 
-    //isValidTransition method, Cho biết từ trạng thái hiện tại có được phép chuyển sang trạng thái mới hay không
+    //isValidTransition method
+    // ステータス遷移可能判定
 
-//    private boolean isValidTransition (String from, String to){
-//        if (from.equals("PENDING") && to.equals("PAID")) return true;
-//        if (from.equals("PENDING") && to.equals("CANCELLED")) return true;
-//        if (from.equals("PAID") && to.equals("SHIPPED")) return true;
-//        if (from.equals("PAID") && to.equals("CANCELLED")) return true;
-//        if (from.equals("SHIPPED") && to.equals("DELIVERED")) return true;
-//        if (from.equals("DELIVERED") && to.equals("STOP")) return true;
-//        if (from.equals("CANCELLED") && to.equals("STOP")) return true;
-
-//        return false;
-//    }
-
-
-    //isValidTransition method, Cho biết từ trạng thái hiện tại có được phép chuyển sang trạng thái mới hay không
+    //Cho biết từ trạng thái hiện tại có được phép chuyển sang trạng thái mới hay không
+    // 現在状態から次状態へ変更可能か確認
     private boolean isValidTransition(OrderStatusCode from, OrderStatusCode to) {
-        // map theo biến hằng số (constant field) ALLOWED được tạo bởi method Map.of() phía dưới
-        // from: gán luôn "PENDING", Set.of() gán luôn PAID và CANCELLED theo kiểu dữ liệu đã gọi,
-        // sau đó là contains(to), xem "to" (là đối số truyền vào vd: "PAID" xem có thuộc Set.of() không?)
-        // nếu contains -> return true;
+
+        // map theo biến hằng số (constant field)
+        // 定数Map参照
+
+        // contains(to), xem "to" có thuộc Set.of() không?
+        // 遷移可能状態チェック
         return ALLOWED.getOrDefault(from, Set.of()).contains(to);
     }
 
 
-    //Dùng Set.of() thay vì List.of() vì:
+    //Dùng Set.of() thay vì List.of()
+    // Set利用でcontains高速化
+
     //Không cần trùng lặp + cần check nhanh .contains()
+    // 重複不要・検索高速
     private static final Map<OrderStatusCode, Set<OrderStatusCode>> ALLOWED = Map.of(
-            OrderStatusCode.PENDING, Set.of(OrderStatusCode.PAID, OrderStatusCode.CANCELLED),
-            OrderStatusCode.PAID, Set.of(OrderStatusCode.SHIPPED),
-            OrderStatusCode.SHIPPED, Set.of(OrderStatusCode.DELIVERED),
-            OrderStatusCode.DELIVERED, Set.of(),
-            OrderStatusCode.CANCELLED, Set.of()
+
+            // PENDING -> PAID / CANCELLED
+            OrderStatusCode.PENDING,
+            Set.of(OrderStatusCode.PAID, OrderStatusCode.CANCELLED),
+
+            // PAID -> SHIPPED
+            OrderStatusCode.PAID,
+            Set.of(OrderStatusCode.SHIPPED),
+
+            // SHIPPED -> DELIVERED
+            OrderStatusCode.SHIPPED,
+            Set.of(OrderStatusCode.DELIVERED),
+
+            // 終了状態
+            OrderStatusCode.DELIVERED,
+            Set.of(),
+
+            // キャンセル済み
+            OrderStatusCode.CANCELLED,
+            Set.of()
     );
 
 
-    //@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true), có orphanRemoval nên đúng với method delete()
+    //@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    // orphanRemoval有効
+
+    // có orphanRemoval nên đúng với method delete()
+    // 子エンティティ自動削除
     public void deleteOrder(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found order by id = " + id));
+
+        // 注文削除
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
         orderRepository.delete(order);
     }
 
-    // Dòng này delete(): Chỉ xóa ở DB (khi flush/commit), KHÔNG tự cập nhật collection trong RAM
+    // Dòng này delete(): Chỉ xóa ở DB
+    // DB削除のみ
+
+    // KHÔNG tự cập nhật collection trong RAM
+    // メモリコレクション未同期
+
     // orderItemRepository.delete(item);
 
     @Transactional
+
     // đảm bảo toàn bộ method chạy trong 1 transaction (ACID)
+    // ACID保証
+
     // nếu có lỗi → rollback toàn bộ
+    // エラー時全件ロールバック
     public void removeItemFromOrder(Long orderId, Long itemId) {
 
+        // ログインユーザー取得
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User currentUser = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         // lấy Order từ DB theo id
+        // 注文取得
+
         // nếu không tồn tại → ném exception
+        // 未存在時例外
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         // lấy OrderItem từ DB
+        // 注文商品取得
         OrderItem item = orderItemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_ITEM_NOT_FOUND));
 
-        // Check order cần remove item xem là: user có trùng với user đang đăng nhập hiện tại không?
+        // Check order cần remove item xem là:
+        // 所有者チェック
+
+        // user có trùng với user đang đăng nhập hiện tại không?
+        // ログインユーザー一致確認
         if (!order.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("403 Forbidden : Access deny");
+            throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
         // check item có thuộc order này không?
+        // 注文所属チェック
         if (!item.getOrder().getId().equals(orderId)) {
-            throw new RuntimeException("Item does not belong to this order");
+            throw new BusinessException(ErrorCode.ORDER_ITEM_NOT_BELONG_TO_ORDER);
         }
 
         // 🔥 dùng helper method trong Order (aggregate root)
+        // Aggregate Root経由操作
+
         // thay vì thao tác trực tiếp vào collection
+        // collection直接操作禁止
+
         // đảm bảo:
-        // - set quan hệ 2 chiều (order <-> orderItem)
-        // - cập nhật totalPrice (nếu có)
-        // - giữ consistency (tính nhất quán dữ liệu)
+        // 整合性保証
+
+        // - set quan hệ 2 chiều
+        // 双方向関連維持
+
+        // - cập nhật totalPrice
+        // 合計金額更新
+
+        // - giữ consistency
+        // データ整合性維持
         order.removeItem(item);
     }
 
-    // ❌ KHÔNG @Transactional -> vì đã có transaction trong processStock
+    // ❌ KHÔNG @Transactional
+    // Transactionなし
+
+    // vì đã có transaction trong processStock
+    // processStock側で管理
     public OrderDTO checkoutOrder() {
+
         // ===============================
         // 1. Lấy user hiện tại
         // ===============================
+        // 現在ログインユーザー取得
+
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Not found user"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         // ===============================
         // 2. Lấy cart ACTIVE
         // ===============================
-        // Cart cart = ...
-        // nếu null → throw
+        // 有効カート取得
+
         Cart cart = cartRepository.findByUserAndStatus(user, CartStatusCode.ACTIVE)
                 .orElseGet(() -> {
+
+                    // カート新規作成
                     Cart newCart = Cart.builder()
                             .user(user)
                             .status(CartStatusCode.ACTIVE)
                             .totalPrice(BigDecimal.ZERO)
                             .build();
+
                     return cartRepository.save(newCart);
                 });
 
         // ===============================
         // 3. Validate cart
         // ===============================
+        // カートバリデーション
+
         // cart.getItems().isEmpty() → throw
+        // 空カート禁止
+
         // chặn không cho check out nếu Cart vẫn: status = ACTIVE, nhưng cartItems = []
+        // 商品未存在チェック
         if (cart.getCartItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new BusinessException(ErrorCode.CART_EMPTY);
         }
 
         // ===============================
         // 3. 🔥 TRỪ STOCK (có retry)
         // ===============================
-        // Tạo StockService để gọi proxy
-        // Proxy : Một lớp trung gian do Spring tạo ra để chặn lời gọi method cùng class và thêm logic (transaction, security, log…)
-        // Phải đi qua proxy thì mới mở transaction
-        processStockWithRetry(cart);
+        // 在庫減算（リトライ付き）
 
+        // Tạo StockService để gọi proxy
+        // Proxy経由呼び出し
+
+        // Proxy : Một lớp trung gian do Spring tạo ra
+        // Spring AOP Proxy
+
+        // Phải đi qua proxy thì mới mở transaction
+        // Proxy経由でTransaction有効
+        processStockWithRetry(cart);
 
         // ===============================
         // 4. Tạo Order : CHECK OUT ORDER 🍺
         // ===============================
-        // Order order = new Order();
-        // order.setUser(user);
-        // order.setCreatedAt(LocalDateTime.now());
+        // 注文生成
+
         Order order = new Order();
+
         order.setUser(user);
+
         //createdAt tao tu dong o entity roi ma?
+        // createdAt自動生成
 
         // set status = PENDING
-        // OrderStatus pending = ...
-        // order.setStatus(pending);
+        // 初期ステータス設定
         order.setStatus(OrderStatusCode.PENDING);
 
         // ===============================
-        // 5. Loop cart items (Lặp qua từng phần)
+        // 5. Loop cart items
         // ===============================
-        // BigDecimal total = BigDecimal.ZERO;
+        // カート商品ループ
 
-        // for (CartItem cartItem : cart.getItems()) {
         for (CartItem cartItem : cart.getCartItems()) {
 
             // 5.1 Lấy product
-            // Product product = ...
+            // 商品取得
             Product product = cartItem.getProduct();
 
             // 5.4 Tạo OrderItem
-            // OrderItem item = new OrderItem();
+            // 注文商品生成
             OrderItem orderItem = new OrderItem();
 
             // set order
-            // order đã tìm theo user đang đăng nhập,
-            // có orders.id = bao nhiêu,
-            // thì sẽ tạo item.order_id fk tương ứng ở item table
-            // orderItem.setOrder(order); // đối chiếu với addItem method trong order entity, done!
+            // 注文関連付け
 
             // set product
+            // 商品設定
             orderItem.setProduct(product);
 
             // set quantity
+            // 数量設定
             orderItem.setQuantity(cartItem.getQuantity());
 
             // ⚠️ SNAPSHOT PRICE
+            // スナップショット価格保存
             orderItem.setPrice(product.getPrice());
 
             // add list orderItem vừa tìm được vào order
+            // 注文へ商品追加
+
             // order.getItems().add(item);
             order.addItem(orderItem);
         }
@@ -392,14 +428,20 @@ public class OrderService {
         // ===============================
         // 7. Save order vào db
         // ===============================
+        // 注文保存
         Order saveOrder = orderRepository.save(order);
 
         // ===============================
-        // 8. Set Status become Checked_out   -> snapshot lịch sử
+        // 8. Set Status become Checked_out
         // ===============================
-        // cart.getItems().clear();
+        // カート状態更新
+
+        // snapshot lịch sử
+        // 履歴保持
         cart.setStatus(CartStatusCode.CHECKED_OUT);
+
         // tạo mới cart
+        // 新規カート作成
         Cart newCart = Cart.builder()
                 .user(user)
                 .status(CartStatusCode.ACTIVE)
@@ -411,47 +453,80 @@ public class OrderService {
         // ===============================
         // 9. Return DTO
         // ===============================
+        // DTO返却
         return OrderMapper.toDTO(saveOrder);
     }
 
 
     //Xử lý trừ tồn kho với cơ chế retry khi xảy ra optimistic locking
+    // 楽観ロック失敗時リトライ処理
     public void processStockWithRetry(Cart cart) {
 
         int maxRetry = 3;   // Số lần retry tối đa
+        // 最大リトライ回数
+
         int attempt = 0;    // Số lần đã thử
+        // 現在試行回数
 
         // Loop retry
+        // リトライループ
         while (attempt < maxRetry) {
             try {
-                // Gọi logic chính xử lý stock (có thể throw exception)
+
+                // Gọi logic chính xử lý stock
+                // 在庫処理実行
+
+                // (có thể throw exception)
+                // 例外発生可能
                 stockService.processStock(cart);
 
-                return; // Nếu thành công thì thoát luôn, không retry nữa
+                return; // Nếu thành công thì thoát luôn
+                // 成功時終了
 
             } catch (ObjectOptimisticLockingFailureException e) {
+
                 // Exception này xảy ra khi:
-                // Có 2 transaction cùng update 1 record (stock)
-                // -> version bị lệch (optimistic lock fail)
+                // 楽観ロック例外
+
+                // Có 2 transaction cùng update 1 record
+                // 同時更新競合
+
+                // -> version bị lệch
+                // version不一致
 
                 attempt++; // Tăng số lần thử
+                // リトライ回数加算
 
                 // Nếu đã retry quá số lần cho phép
+                // 最大回数超過
                 if (attempt >= maxRetry) {
-                    // Ném lỗi ra ngoài (fail hẳn)
-                    throw new RuntimeException("System busy, please try again");
+
+                    // Ném lỗi ra ngoài
+                    // 業務例外送出
+                    throw new BusinessException(ErrorCode.SYSTEM_BUSY);
                 }
 
                 try {
+
                     // ⏳ Delay 1 chút trước khi retry
+                    // リトライ前待機
+
                     // Tránh retry liên tục gây xung đột tiếp
+                    // 競合緩和
                     Thread.sleep(100);
 
                 } catch (InterruptedException ex) {
-                    // Nếu thread bị interrupt thì set lại trạng thái interrupt
+
+                    // Nếu thread bị interrupt
+                    // Thread割り込み検知
+
                     //interrupt = ngắt / làm gián đoạn thread
+                    // スレッド中断
+
                     Thread.currentThread().interrupt();
-                    //OK, tao bị interrupt → tao không xử lý nữa, nhưng tao ghi nhớ trạng thái bị interrupt
+
+                    //OK, tao bị interrupt
+                    // 割り込み状態保持
                 }
             }
         }
@@ -459,43 +534,35 @@ public class OrderService {
 
 
     public void paidOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // 注文取得
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        // 重複コールバック防止
         if (order.getStatus() == OrderStatusCode.PAID) {
+
+            // ログ出力
             log.info("Duplicate callback for order {}", orderId);
+
             return;
         }
+
+        // ステータス変更
         changerStatus(order, OrderStatusCode.PAID);
     }
 
     private void changerStatus(Order order, OrderStatusCode newStatus) {
+
+        // 現在状態取得
         OrderStatusCode currentStatusCode = order.getStatus();
+
+        // 不正遷移チェック
         if (!isValidTransition(currentStatusCode, newStatus)) {
-            throw new RuntimeException("Invalid transition from " + currentStatusCode + "to " + newStatus);
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS_TRANSITION);
         }
+
+        // ステータス更新
         order.setStatus(newStatus);
     }
 }
-
-
-/*
-User click "Pay"
-        ↓
-Backend tạo payment URL (có hash)
-        ↓
-Redirect sang VNPay
-        ↓
-User thanh toán
-        ↓
-VNPay gọi ipnUrl (server bạn)  ✅ QUAN TRỌNG
-        ↓
-Bạn verify hash
-        ↓
-Update order = PAID
-        ↓
-VNPay redirect user về returnUrl
-        ↓
-Frontend hiển thị kết quả
-*/
-
-
-

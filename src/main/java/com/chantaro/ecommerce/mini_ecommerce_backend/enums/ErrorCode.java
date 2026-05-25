@@ -45,6 +45,46 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST
     ),
 
+    // Trạng thái đơn hàng hiện tại không tồn tại
+    // 現在の注文ステータスが存在しない
+    ORDER_STATUS_MISSING(
+            4003,
+            "Current order has no status",
+            HttpStatus.INTERNAL_SERVER_ERROR
+    ),
+
+    // Trạng thái mới trùng với trạng thái hiện tại
+    // 新しいステータスが現在のステータスと同じ
+    ORDER_STATUS_ALREADY_SET(
+            4004,
+            "The status is already the same",
+            HttpStatus.BAD_REQUEST
+    ),
+
+    // Chuyển trạng thái đơn hàng không hợp lệ
+    // 不正な注文ステータス遷移
+    INVALID_ORDER_STATUS_TRANSITION(
+            4005,
+            "Invalid order status transition",
+            HttpStatus.BAD_REQUEST
+    ),
+
+    // Không tìm thấy sản phẩm trong đơn hàng
+    // 注文商品のデータが存在しない
+    ORDER_ITEM_NOT_FOUND(
+            4006,
+            "Order item not found",
+            HttpStatus.NOT_FOUND
+    ),
+
+    // Sản phẩm không thuộc đơn hàng này
+    // 商品がこの注文に属していない
+    ORDER_ITEM_NOT_BELONG_TO_ORDER(
+            4007,
+            "Order item does not belong to this order",
+            HttpStatus.BAD_REQUEST
+    ),
+
     // =====================================================
     // PAYMENT / 決済関連
     // =====================================================
@@ -71,6 +111,14 @@ public enum ErrorCode {
             5003,
             "Payment already success",
             HttpStatus.BAD_REQUEST
+    ),
+
+    // Hệ thống đang bận, vui lòng thử lại sau
+    // システムが混雑しています。後でもう一度お試しください
+    SYSTEM_BUSY(
+            5004,
+            "System busy, please try again later",
+            HttpStatus.SERVICE_UNAVAILABLE
     ),
 
     // =====================================================
@@ -123,6 +171,14 @@ public enum ErrorCode {
 
             HttpStatus.BAD_REQUEST
 
+    ),
+
+    // Giỏ hàng trống
+    // カートが空です
+    CART_EMPTY(
+            8003,
+            "Cart is empty",
+            HttpStatus.BAD_REQUEST
     ),
 
     // Không có quyền truy cập tài nguyên
