@@ -38,7 +38,7 @@ public class ProductService {
 
     public ProductDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Not found product!"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
         return ProductMapper.toDTO(product);
     }
 
@@ -53,7 +53,7 @@ public class ProductService {
             // 2. Tìm category theo categoryId từ request
             //    Nếu không tìm thấy → báo lỗi ngay
             Category category = categoryRepository.findById(rq.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Not found category id: " + rq.getCategoryId()));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
             // 3. Tạo object Product mới (entity để lưu database)
             Product p = new Product();
@@ -127,7 +127,7 @@ public class ProductService {
     public ProductDTO updateProduct(Long id, CreateProductRequest rq) {
         Product product = productRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Category category = categoryRepository.findById(rq.getCategoryId()).orElseThrow(() -> new RuntimeException("Not found category"));
+        Category category = categoryRepository.findById(rq.getCategoryId()).orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
 
         product.setName(rq.getName());
         product.setDescription(rq.getDescription());
@@ -140,11 +140,11 @@ public class ProductService {
     public void deleteProduct(Long id) {
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         // check product có đang được sử dụng không
         if (orderItemRepository.existsByProduct(product) || cartItemRepository.existsByProduct(product)) {
-            throw new RuntimeException("Cannot delete because product is being used");
+            throw new BusinessException(ErrorCode.PRODUCT_IN_USE);
         }
 
         productRepository.delete(product);

@@ -147,6 +147,14 @@ public enum ErrorCode {
             HttpStatus.NOT_FOUND
     ),
 
+    // Sản phẩm đang được sử dụng
+    // 商品は使用中のため削除不可
+    PRODUCT_IN_USE(
+            6003,
+            "Cannot delete because product is being used",
+            HttpStatus.BAD_REQUEST
+    ),
+
     // =====================================================
     // USER / ユーザー関連
     // =====================================================
@@ -195,6 +203,18 @@ public enum ErrorCode {
             4030,
             "Access denied",
             HttpStatus.FORBIDDEN
+    ),
+
+    // =====================================================
+    // CATEGORY / カテゴリ関連
+    // =====================================================
+
+    // Không tìm thấy category
+    // カテゴリが存在しない
+    CATEGORY_NOT_FOUND(
+            9001,
+            "Category not found",
+            HttpStatus.NOT_FOUND
     ),
     ;
 
