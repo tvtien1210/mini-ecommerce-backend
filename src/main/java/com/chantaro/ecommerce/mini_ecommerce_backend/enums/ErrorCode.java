@@ -121,6 +121,14 @@ public enum ErrorCode {
             HttpStatus.SERVICE_UNAVAILABLE
     ),
 
+    // Số tiền thanh toán không khớp
+    // 決済金額不一致
+    INVALID_PAYMENT_AMOUNT(
+            5005,
+            "Invalid payment amount",
+            HttpStatus.BAD_REQUEST
+    ),
+
     // =====================================================
     // PRODUCT / 商品関連
     // =====================================================
