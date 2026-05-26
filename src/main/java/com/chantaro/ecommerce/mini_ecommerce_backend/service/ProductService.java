@@ -44,21 +44,28 @@ public class ProductService {
 
 
     // Tối ưu hơn
+    // 最適化された方法（パフォーマンス向上）
     public List<ProductDTO> saveProduct(List<CreateProductRequest> requests) {
 
         // 1. Convert danh sách Request (DTO từ client)
         //    → sang danh sách Entity Product để lưu DB
+        // 1. クライアントから受け取った Request DTO のリストを
+        //    DB保存用の Product Entity リストへ変換する
         List<Product> products = requests.stream().map(rq -> {
 
             // 2. Tìm category theo categoryId từ request
             //    Nếu không tìm thấy → báo lỗi ngay
+            // 2. request の categoryId を使って Category を検索
+            //    見つからない場合は即エラーを返す
             Category category = categoryRepository.findById(rq.getCategoryId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
             // 3. Tạo object Product mới (entity để lưu database)
+            // 3. DB保存用の新しい Product Entity を作成
             Product p = new Product();
 
             // 4. Map dữ liệu từ request → entity Product
+            // 4. request のデータを Product Entity にマッピング
             p.setName(rq.getName());
             p.setDescription(rq.getDescription());
             p.setPrice(rq.getPrice());
@@ -66,18 +73,25 @@ public class ProductService {
 
             // 5. Gán category (FK relationship)
             //    Nếu không set → category_id trong DB sẽ NULL → lỗi dữ liệu
+            // 5. category を設定（外部キー関連）
+            //    設定しない場合、DB の category_id が NULL になりデータ不整合が発生する
             p.setCategory(category);
 
             // 6. Trả về product để đưa vào list
+            // 6. list に追加するため Product を返す
             return p;
 
         }).toList();
 
         // 7. Lưu toàn bộ danh sách Product vào database cùng lúc (batch insert)
+        // 7. Product リストを一括で DB に保存する（バッチインサート）
         List<Product> saved = productRepository.saveAll(products); // 🍺-> saveAll: lưu luôn tất cả một lúc, tối ưu code
+        // 🍺 saveAll: 一括保存することでコードとパフォーマンスを最適化
 
         // 8. Convert từ Entity (Product) → DTO để trả về cho client
         // product chính là từng phần tử trong saved (map = for(...))
+        // 8. Entity(Product) → DTO に変換してクライアントへ返却
+        // product は saved リスト内の各要素
         return saved.stream()
                 .map(product -> ProductMapper.toDTO(product))
                 .toList();
@@ -85,22 +99,28 @@ public class ProductService {
 
 
     //Không tối ưu, chậm nếu nhiều data (save 1 → save 2 → save 3 ...)
+    // 最適化されていない方法。データ量が多い場合は遅くなる（1件ずつ保存）
 //    public List<ProductDTO> saveProduct(List<CreateProductRequest> requests) {
 //
 //        // Danh sách kết quả trả về (DTO)
+//        // 返却用DTOリスト
 //        List<ProductDTO> result = new ArrayList<>();
 //
 //        // Duyệt từng request (mỗi request là 1 sản phẩm)
+//        // request を1件ずつ処理（1 request = 1商品）
 //        for (CreateProductRequest rq : requests) {
 //
 //            // 1. Tìm category theo id (bắt buộc phải tồn tại)
+//            // 1. id を使って Category を検索（必須存在）
 //            Category category = categoryRepository.findById(rq.getCategoryId())
 //                    .orElseThrow(() -> new RuntimeException("Not found category id: " + rq.getCategoryId()));
 //
 //            // 2. Tạo object Product mới để lưu DB
+//            // 2. DB保存用 Product Entity を作成
 //            Product product = new Product();
 //
 //            // 3. Gán dữ liệu từ request sang entity
+//            // 3. request データを entity にセット
 //            product.setName(rq.getName());
 //            product.setDescription(rq.getDescription());
 //            product.setPrice(rq.getPrice());
@@ -108,32 +128,41 @@ public class ProductService {
 //
 //            // 4. Gán category (QUAN TRỌNG)
 //            // Nếu không set -> category_id trong DB sẽ = NULL → lỗi dữ liệu
+//            // 4. category を設定（重要）
+//            // 設定しない場合、DB の category_id が NULL になり不整合が発生
 //            product.setCategory(category);
 //
 //            // 5. Lưu vào database ‼️save 1 -> save 2 -> save 3 here ...
+//            // 5. DB に1件ずつ保存
 //            Product savedProduct = productRepository.save(product);
 //
 //            // 6. Convert từ Entity -> DTO để trả ra API
+//            // 6. Entity → DTO に変換して API レスポンスへ
 //            ProductDTO dto = ProductMapper.toDTO(savedProduct);
 //
 //            // 7. Add vào list kết quả
+//            // 7. 結果リストへ追加
 //            result.add(dto);
 //        }
 //
 //        // Trả về danh sách product đã tạo
+//        // 作成した Product リストを返却
 //        return result;
 //    }
 
     public ProductDTO updateProduct(Long id, CreateProductRequest rq) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Category category = categoryRepository.findById(rq.getCategoryId()).orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+        Category category = categoryRepository.findById(rq.getCategoryId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
         product.setName(rq.getName());
         product.setDescription(rq.getDescription());
         product.setPrice(rq.getPrice());
         product.setStock(rq.getStock());
         product.setCategory(category);
+
         return ProductMapper.toDTO(productRepository.save(product));
     }
 
@@ -143,12 +172,11 @@ public class ProductService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         // check product có đang được sử dụng không
+        // product が現在使用中かチェックする
         if (orderItemRepository.existsByProduct(product) || cartItemRepository.existsByProduct(product)) {
             throw new BusinessException(ErrorCode.PRODUCT_IN_USE);
         }
 
         productRepository.delete(product);
     }
-
-
 }
