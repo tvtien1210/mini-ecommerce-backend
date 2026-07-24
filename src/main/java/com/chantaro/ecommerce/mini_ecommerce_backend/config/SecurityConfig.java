@@ -1,8 +1,8 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.config;
 
 // ===== Import JWT =====
-
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtFilter;
+
 
 // ===== Import Spring =====
 import lombok.AllArgsConstructor;

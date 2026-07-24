@@ -216,6 +216,17 @@ public enum ErrorCode {
             "Category not found",
             HttpStatus.NOT_FOUND
     ),
+    // =====================================================
+    // ROLE / ロール関連
+    // =====================================================
+
+    // Không tìm thấy role
+    // ロールが存在しない
+    ROLE_NOT_FOUND(
+            10001,
+            "Role not found",
+            HttpStatus.NOT_FOUND
+    ),
     ;
 
     // Mã lỗi nội bộ
