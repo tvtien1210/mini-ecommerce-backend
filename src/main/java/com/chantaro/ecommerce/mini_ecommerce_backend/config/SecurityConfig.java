@@ -36,13 +36,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 // Tự động tạo constructor chứa TẤT CẢ field "final" trong class
 // Dùng để inject dependency nhanh (constructor injection)
 // Tránh phải viết constructor thủ công
-@AllArgsConstructor
 public class SecurityConfig {
 
     // ===== JWT FILTER =====
     // Filter dùng để check token mỗi request
     // final = gán 1 lần duy nhất + đảm bảo không bị thay đổi reference (tham chieu)
     private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
 
     // ===== PASSWORD ENCODER =====
     // Bean mã hoá password bằng BCrypt
@@ -53,7 +56,7 @@ public class SecurityConfig {
     }
 
     // ===== DAO AUTHENTICATION PROVIDER =====
-    // Đây là class xử lý login bằng DB
+    // Đây là tạo class xử lý login bằng DB
     // -> dùng UserDetailsService để load user
     // -> dùng PasswordEncoder để check password
     @Bean
@@ -134,6 +137,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/orders/my").hasRole("CUSTOMER")
                         .requestMatchers("/api/orders/**").hasAnyRole("ADMIN", "STAFF")
                         .requestMatchers("/api/orders/{id}/status").hasAnyRole("ADMIN","STAFF")
+
+                        // public resources
+                        .requestMatchers(
+                                "/images/**",
+                                "/css/**",
+                                "/js/**",
+                                "/favicon.ico"
+                        ).permitAll()
 
                         // ===== CÒN LẠI =====
                         .anyRequest().authenticated()
