@@ -9,7 +9,7 @@ import java.util.Optional;
 //	Dùng interface để Spring Data JPA tự tạo implementation tự động → tiết kiệm code, dễ maintain.
 //	Nếu dùng class, phải tự viết logic thao tác database, mất đi ưu điểm chính của Spring Data.
 @Repository
-public interface RoleRepository extends JpaRepository<Role,Long> {
+public interface RoleRepository extends JpaRepository<Role,Integer> {
     //// Trả về Optional để xử lý trường hợp user không tồn tại null an toàn hơn, xu ly ngoai le orElseThrow
     Optional<Role> findByName(String name);
 }

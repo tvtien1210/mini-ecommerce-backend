@@ -2,7 +2,9 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.CreateRegisterRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.RegisterDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Role;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
+import com.chantaro.ecommerce.mini_ecommerce_backend.repository.RoleRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,11 +15,13 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private RoleRepository roleRepository;
 
     @Autowired
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
     public RegisterDTO register(CreateRegisterRequest request) {
@@ -39,6 +43,12 @@ public class AuthService {
 
         user.setFullName(request.getFullName());
 
+        //ROLE
+        Role role = roleRepository.findByName("ROLE_CUSTOMER")
+                .orElseThrow();
+
+        user.addRole(role);
+
         User savedUser = userRepository.save(user);
 
         return new RegisterDTO(
@@ -51,3 +61,33 @@ public class AuthService {
 
     }
 }
+
+
+/*
+
+Them user.addRole(role);
+thì flow đăng ký sẽ trở thành:
+Register
+    ↓
+Tạo User
+    ↓
+BCrypt encode password
+    ↓
+Lấy ROLE_CUSTOMER từ database
+    ↓
+user.addRole(role)
+    ↓
+userRepository.save(user)
+    ↓
+users_roles được tạo
+
+Sau đó, khi login:
+Login
+    ↓
+CustomUserDetailsService.loadUserByUsername()
+    ↓
+Lấy User + Roles
+    ↓
+Spring Security xác thực password
+    ↓
+JWT được tạo*/

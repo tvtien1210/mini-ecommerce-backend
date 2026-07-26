@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 // Đánh dấu đây là Repository (tầng truy cập DB)
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -22,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Cách 1: Giữ nguyên @Query của bạn (đã bỏ @Param cho gọn)
     @Query("SELECT u FROM User u JOIN FETCH u.roles WHERE u.username = :username")
-    Optional<User> findByUsername(String username);
+    Optional<User> findByUsername(@Param("username") String username);
 
     // Cách 2: Dùng @EntityGraph (Thay thế cho JOIN FETCH, code ngắn gọn hơn)
     @EntityGraph(attributePaths = {"roles"})

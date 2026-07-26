@@ -156,7 +156,8 @@ public class SecurityConfig {
                 //    1. gọi UserDetailsService
                 //    2. lấy user từ DB
                 //    3. check password bằng BCrypt
-                .authenticationProvider(daoAuthenticationProvider(null)) //Spring inject tự động
+
+
 
                 // ===== JWT FILTER =====
                 // Thêm filter trước UsernamePasswordAuthenticationFilter
