@@ -56,8 +56,8 @@ public class Product {
     //reserved_stock INT NOT NULL DEFAULT 0
     @NotNull
     @Min(0)
-    @Column(name = "reserved_stock",nullable = false)
-    private Integer reservedStock;
+    @Column(name = "reserved_stock", nullable = false)
+    private Integer reservedStock = 0;
 
     // Lock stock (race condition),
     // khoá số lượng tồn kho sau khi trừ, sau khi có user load mua hàng trước, ai nhanh người ấy được
@@ -85,7 +85,8 @@ public class Product {
     private LocalDateTime updatedAt;
 
     // Constructor rỗng (JPA bắt buộc phải có)
-    public Product() {}
+    public Product() {
+    }
 
     // Constructor tiện để tạo object nhanh
     public Product(String name, String description, BigDecimal price, Integer stock) {
