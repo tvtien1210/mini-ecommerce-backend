@@ -1,5 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.config;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,6 +17,11 @@ public class VNPayConfig {
     private String url;
     private String returnUrl;
     private String ipnUrl;
+
+//    @PostConstruct
+//    public void checkConfig(){
+//        System.out.println("TMN CODE = " + tmnCode);
+//    }
 }
 
 //public class VNPayConfig {

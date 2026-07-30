@@ -1,10 +1,12 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.OrderStatusCode;
-import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatus;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
+import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.PaymentMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.OrderRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.PaymentRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
@@ -18,7 +20,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor //Không phải tạo Constructor (DI) thủ công
@@ -33,31 +34,36 @@ public class PaymentServiceImpl implements PaymentService {
     // 1. CREATE PAYMENT
     // 1. 決済URL作成
     @Override
-    public String createPaymentUrl(Long orderId,
+    @Transactional //Nếu save Payment thành công nhưng build URL lỗi thì: rollback
+    public PaymentDTO createPaymentUrl(Long orderId,
                                    HttpServletRequest request) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
+        if (order.getStatus() == OrderStatusCode.PAID) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_SUCCESS);
+        }
+
         // tạo txnRef DUY NHẤT
         // 一意なtxnRefを生成
-        String txnRef = UUID.randomUUID().toString();
+        String newTxnRef = "ORDER_" + orderId + "_" + System.currentTimeMillis();
 
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setTxnRef(txnRef);
-        payment.setAmount(order.getTotalPrice());
-        payment.setStatus(PaymentStatus.PENDING);
-        payment.setExpiredAt(LocalDateTime.now().plusMinutes(15));
-        paymentRepository.save(payment);
+        Payment savedPayment = new Payment();
+        savedPayment.setOrder(order);
+        savedPayment.setTxnRef(newTxnRef);
+        savedPayment.setAmount(order.getTotalPrice());
+        savedPayment.setStatus(PaymentStatusCode.PENDING);
+        savedPayment.setExpiredAt(LocalDateTime.now().plusMinutes(15));
+        paymentRepository.save(savedPayment);
 
         // truyền txnRef vào build URL
         // txnRefを決済URL生成に渡す
-        return vnPayUtil.buildPaymentUrl(
-                order,
-                txnRef,
-                request
-        );
+
+        String paymentUrl = vnPayUtil.buildPaymentUrl(savedPayment.getAmount(), savedPayment.getTxnRef(), request);
+
+
+        return PaymentMapper.toDTO(savedPayment,paymentUrl);
     }
 
     // 2. HANDLE IPN
@@ -84,7 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
         // 2. idempotent, nếu payment này đã xử lý SUCCESS rồi thì thôi, dừng method tại đây
         // 2. 冪等性保証:
         // 既にSUCCESS処理済みなら何もしない
-        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+        if (payment.getStatus() == PaymentStatusCode.SUCCESS) {
 
             // thoát khỏi method NGAY LẬP TỨC
             // メソッドを即終了
@@ -121,7 +127,7 @@ public class PaymentServiceImpl implements PaymentService {
         // 4. 決済成功
         if ("00".equals(params.get("vnp_ResponseCode"))) {
 
-            payment.setStatus(PaymentStatus.SUCCESS);
+            payment.setStatus(PaymentStatusCode.SUCCESS);
             order.setStatus(OrderStatusCode.PAID);
 
             // trừ stock thật
@@ -141,7 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             // fail
             // 決済失敗
-            payment.setStatus(PaymentStatus.FAILED);
+            payment.setStatus(PaymentStatusCode.FAILED);
 
             handlePaymentFailed(order);
         }
@@ -183,7 +189,7 @@ public class PaymentServiceImpl implements PaymentService {
         // - 有効期限切れ
         List<Payment> expiredPayments =
                 paymentRepository.findByStatusAndExpiredAtBefore(
-                        PaymentStatus.PENDING,
+                        PaymentStatusCode.PENDING,
                         LocalDateTime.now()
                 );
 
@@ -225,4 +231,10 @@ public class PaymentServiceImpl implements PaymentService {
             handlePaymentFailed(order);
         }
     }
+
+    @Override
+    public boolean verify(Map<String, String> params) {
+        return vnPayUtil.verify(params);
+    }
+
 }

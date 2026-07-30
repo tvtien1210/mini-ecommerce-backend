@@ -1,14 +1,17 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment.PaymentDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.checkout.CheckoutDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.order.OrderDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.orderstatus.UpdateOrderStatusRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
-import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
-import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
-import com.chantaro.ecommerce.mini_ecommerce_backend.enums.OrderStatusCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
+import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.CheckoutMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.OrderMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.*;
+import com.chantaro.ecommerce.mini_ecommerce_backend.util.VNPayUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -18,10 +21,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Slf4j // tạo logger
 // ログ出力用アノテーション
@@ -36,23 +39,32 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final StockService stockService;
+    private final PaymentRepository paymentRepository;
+    private final PaymentServiceImpl paymentServiceImpl;
+
+    private final VNPayUtil vnPayUtil;
+
+
 
     @Autowired
-    // コンストラクタインジェクション
-    public OrderService(CartRepository cartRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, StockService stockService) {
+    public OrderService(CartRepository cartRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, StockService stockService, PaymentRepository paymentRepository, PaymentServiceImpl paymentServiceImpl, VNPayUtil vnPayUtil) {
         this.cartRepository = cartRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.stockService = stockService;
+        this.paymentRepository = paymentRepository;
+        this.paymentServiceImpl = paymentServiceImpl;
+        this.vnPayUtil = vnPayUtil;
     }
+
 
 
     public List<OrderDTO> getAllOrders() {
 
         // 全注文一覧取得
-        return orderRepository.findAll().stream()
+        return orderRepository.getAllOrders().stream()
                 .map(order -> OrderMapper.toDTO(order))
                 .toList();
     }
@@ -109,6 +121,121 @@ public class OrderService {
                 .map(order -> OrderMapper.toDTO(order))
                 .toList();
     }
+
+    // ❌ KHÔNG @Transactional
+    // Transactionなし
+
+    // vì đã có transaction trong processStock
+    // processStock側で管理
+    public CheckoutDTO checkoutOrder(HttpServletRequest request) {
+
+        // ===============================
+        // 1. Lấy user hiện tại
+        // ===============================
+        // 現在ログインユーザー取得
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // ===============================
+        // 2. Lấy cart ACTIVE
+        // ===============================
+        // 有効カート取得
+
+        Cart cart = cartRepository.findByUserAndStatus(user, CartStatusCode.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND));
+
+        // ===============================
+        // 3. Validate cart
+        // ===============================
+        // カートバリデーション
+
+        // cart.getItems().isEmpty() → throw
+        // 空カート禁止
+
+        // chặn không cho check out nếu Cart vẫn: status = ACTIVE, nhưng cartItems = []
+        // 商品未存在チェック
+        if (cart.getCartItems().isEmpty()) {
+            throw new BusinessException(ErrorCode.CART_EMPTY);
+        }
+
+
+        // ===============================
+        // 4. Tạo Order : CHECK OUT ORDER 🍺
+        // ===============================
+        // 注文生成
+
+        Order order = new Order();
+
+
+        order.setUser(user);
+
+        //createdAt tao tu dong o entity roi ma?
+        // createdAt自動生成
+
+        // set status = PENDING
+        // 初期ステータス設定
+        order.setStatus(OrderStatusCode.PENDING);
+
+        // ===============================
+        // 5. Loop cart items
+        // ===============================
+        // カート商品ループ
+
+        for (CartItem cartItem : cart.getCartItems()) {
+
+            // 5.1 Lấy product
+            // 商品取得
+            Product product = cartItem.getProduct();
+
+            // 5.4 Tạo OrderItem
+            // 注文商品生成
+            OrderItem orderItem = new OrderItem();
+
+            // set order
+            // 注文関連付け
+
+            // set product
+            // 商品設定
+            orderItem.setProduct(product);
+
+            // set quantity
+            // 数量設定
+            orderItem.setQuantity(cartItem.getQuantity());
+
+            // ⚠️ SNAPSHOT PRICE
+            // スナップショット価格保存
+            orderItem.setPrice(product.getPrice()); // đây là giá snapshot thời điểm đặt hàng cart.getProduct(), theo code tạo object này  Product product = cartItem.getProduct();
+
+            orderItem.setProductName(product.getName());
+
+            // add list orderItem vừa tìm được vào order
+            // 注文へ商品追加
+
+            // order.getItems().add(item);
+            order.addItem(orderItem);
+        }
+
+        // ===============================
+        // 7. Save order vào db
+        // ===============================
+        // 注文保存
+        Order saveOrder = orderRepository.save(order);
+
+
+        //Tạo Payment - Status Pending
+        PaymentDTO paymentDTO = paymentServiceImpl.createPaymentUrl(saveOrder.getId(), request);
+
+
+        // ===============================
+        // 9. Return DTO
+        // ===============================
+        // DTO返却
+        return CheckoutMapper.toDTO(saveOrder,paymentDTO, paymentDTO.getPaymentUrl());
+    }
+
 
     @Transactional
     // トランザクション制御
@@ -308,155 +435,6 @@ public class OrderService {
         order.removeItem(item);
     }
 
-    // ❌ KHÔNG @Transactional
-    // Transactionなし
-
-    // vì đã có transaction trong processStock
-    // processStock側で管理
-    public OrderDTO checkoutOrder() {
-
-        // ===============================
-        // 1. Lấy user hiện tại
-        // ===============================
-        // 現在ログインユーザー取得
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-
-        // ===============================
-        // 2. Lấy cart ACTIVE
-        // ===============================
-        // 有効カート取得
-
-        Cart cart = cartRepository.findByUserAndStatus(user, CartStatusCode.ACTIVE)
-                .orElseGet(() -> {
-
-                    // カート新規作成
-                    Cart newCart = Cart.builder()
-                            .user(user)
-                            .status(CartStatusCode.ACTIVE)
-                            .totalPrice(BigDecimal.ZERO)
-                            .build();
-
-                    return cartRepository.save(newCart);
-                });
-
-        // ===============================
-        // 3. Validate cart
-        // ===============================
-        // カートバリデーション
-
-        // cart.getItems().isEmpty() → throw
-        // 空カート禁止
-
-        // chặn không cho check out nếu Cart vẫn: status = ACTIVE, nhưng cartItems = []
-        // 商品未存在チェック
-        if (cart.getCartItems().isEmpty()) {
-            throw new BusinessException(ErrorCode.CART_EMPTY);
-        }
-
-        // ===============================
-        // 3. 🔥 TRỪ STOCK (có retry)
-        // ===============================
-        // 在庫減算（リトライ付き）
-
-        // Tạo StockService để gọi proxy
-        // Proxy経由呼び出し
-
-        // Proxy : Một lớp trung gian do Spring tạo ra
-        // Spring AOP Proxy
-
-        // Phải đi qua proxy thì mới mở transaction
-        // Proxy経由でTransaction有効
-        processStockWithRetry(cart);
-
-        // ===============================
-        // 4. Tạo Order : CHECK OUT ORDER 🍺
-        // ===============================
-        // 注文生成
-
-        Order order = new Order();
-
-        order.setUser(user);
-
-        //createdAt tao tu dong o entity roi ma?
-        // createdAt自動生成
-
-        // set status = PENDING
-        // 初期ステータス設定
-        order.setStatus(OrderStatusCode.PENDING);
-
-        // ===============================
-        // 5. Loop cart items
-        // ===============================
-        // カート商品ループ
-
-        for (CartItem cartItem : cart.getCartItems()) {
-
-            // 5.1 Lấy product
-            // 商品取得
-            Product product = cartItem.getProduct();
-
-            // 5.4 Tạo OrderItem
-            // 注文商品生成
-            OrderItem orderItem = new OrderItem();
-
-            // set order
-            // 注文関連付け
-
-            // set product
-            // 商品設定
-            orderItem.setProduct(product);
-
-            // set quantity
-            // 数量設定
-            orderItem.setQuantity(cartItem.getQuantity());
-
-            // ⚠️ SNAPSHOT PRICE
-            // スナップショット価格保存
-            orderItem.setPrice(product.getPrice());
-
-            // add list orderItem vừa tìm được vào order
-            // 注文へ商品追加
-
-            // order.getItems().add(item);
-            order.addItem(orderItem);
-        }
-
-        // ===============================
-        // 7. Save order vào db
-        // ===============================
-        // 注文保存
-        Order saveOrder = orderRepository.save(order);
-
-        // ===============================
-        // 8. Set Status become Checked_out
-        // ===============================
-        // カート状態更新
-
-        // snapshot lịch sử
-        // 履歴保持
-        cart.setStatus(CartStatusCode.CHECKED_OUT);
-
-        // tạo mới cart
-        // 新規カート作成
-        Cart newCart = Cart.builder()
-                .user(user)
-                .status(CartStatusCode.ACTIVE)
-                .totalPrice(BigDecimal.ZERO)
-                .build();
-
-        cartRepository.save(newCart);
-
-        // ===============================
-        // 9. Return DTO
-        // ===============================
-        // DTO返却
-        return OrderMapper.toDTO(saveOrder);
-    }
-
 
     //Xử lý trừ tồn kho với cơ chế retry khi xảy ra optimistic locking
     // 楽観ロック失敗時リトライ処理
@@ -565,4 +543,154 @@ public class OrderService {
         // ステータス更新
         order.setStatus(newStatus);
     }
+
+    public OrderDTO cancelOrder(Long id, Authentication authentication) {
+        String username =
+                authentication.getName();
+
+
+        Order order =
+                orderRepository.findById(id)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Order not found"
+                                )
+                        );
+
+
+        // kiểm tra chủ order
+        if (!order.getUser()
+                .getUsername()
+                .equals(username)) {
+
+            throw new RuntimeException(
+                    "You cannot cancel this order"
+            );
+        }
+
+
+        // chỉ cho cancel khi PENDING
+        if (order.getStatus()
+                != OrderStatusCode.PENDING) {
+
+            throw new RuntimeException(
+                    "Order cannot be cancelled"
+            );
+        }
+
+
+        order.setStatus(
+                OrderStatusCode.CANCELLED
+        );
+
+
+        Order saved =
+                orderRepository.save(order);
+
+
+        return OrderMapper.toDTO(saved);
+    }
 }
+
+/*
+Cart (ACTIVE)
+
+↓
+
+Checkout
+
+↓
+
+Create Order
+status = PENDING
+
+↓
+
+Create Payment
+status = PENDING
+
+↓
+
+Redirect VNPay
+
+====================
+
+VNPay
+
+↓
+
+IPN
+
+↓
+
+Verify SecureHash
+
+↓
+
+Payment SUCCESS ?
+      │
+ ┌────┴─────┐
+ │          │
+YES        NO
+ │          │
+ ▼          ▼
+
+Payment    Payment
+SUCCESS    FAILED
+
+ │          │
+
+Order      Order
+PAID       CANCELLED
+
+ │
+
+Stock--
+
+ │
+
+Cart CHECKED_OUT
+
+ │
+
+Create New Cart
+
+ │
+
+Done
+
+
+
+       // ===============================
+        // 3. 🔥 TRỪ STOCK (có retry)
+        // ===============================
+        // 在庫減算（リトライ付き）
+
+        // Tạo StockService để gọi proxy
+        // Proxy経由呼び出し
+
+        // Proxy : Một lớp trung gian do Spring tạo ra
+        // Spring AOP Proxy
+
+        // Phải đi qua proxy thì mới mở transaction
+        // Proxy経由でTransaction有効
+        processStockWithRetry(cart);
+
+
+
+
+   Cart cart = cartRepository.findByUserAndStatus(user, CartStatusCode.ACTIVE)
+                .orElseGet(() -> {
+
+                    // カート新規作成
+                    Cart newCart = Cart.builder()
+                            .user(user)
+                            .status(CartStatusCode.ACTIVE)
+                            .totalPrice(BigDecimal.ZERO)
+                            .currency(CurrencyCode.VND)
+                            .build();
+
+                    return cartRepository.save(newCart);
+                });
+
+*/

@@ -5,6 +5,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.config.VNPayConfig;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Payment;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,11 +22,10 @@ import java.util.*;
 public class VNPayUtil {
 
     private final VNPayConfig vnPayConfig;
-
     // =========================
     // 1. CREATE PAYMENT URL
     // =========================
-    public String buildPaymentUrl(Order order, String txnRef, HttpServletRequest request) {
+    public String buildPaymentUrl(BigDecimal newAmount , String newTxnRef, HttpServletRequest request) {
 
         try {
 
@@ -34,21 +34,24 @@ public class VNPayUtil {
             // KHÔNG có dấu thập phân
             // Không dùng .toString() trực tiếp
             // Dùng .longValue() trước để BigDecimal ví dụ, 10000.00 sẽ thành long 1000000(bỏ đi dấu phẩy ở giữa, nếu không sẽ sai giá trị amount gửi lên vnpay)
-            String amount = String.valueOf(order.getTotalPrice().multiply(BigDecimal.valueOf(100)).longValue());
+            String vnpAmount = String.valueOf(newAmount.multiply(BigDecimal.valueOf(100)).longValue());
 
             //request payload gửi sang VNPay
             Map<String, String> params = new HashMap<>();
 
             params.put("vnp_Version", "2.1.0");
             params.put("vnp_Command", "pay"); //lenh: pay
+            //Merchant code lấy từ VNPay
             params.put("vnp_TmnCode", vnPayConfig.getTmnCode());
 
-            params.put("vnp_Amount", amount);
+            params.put("vnp_Amount", vnpAmount);
             params.put("vnp_CurrCode", "VND"); //currency, tiền tệ
 
-            params.put("vnp_TxnRef", txnRef);
+            // Ví dụ:
+            // ORDER_15_1722051234567
+            params.put("vnp_TxnRef", newTxnRef); // mã giao dịch duy nhất phiên đó...
 
-            params.put("vnp_OrderInfo", "Thanh toan don hang " + order.getId());
+            params.put("vnp_OrderInfo", "Thanh toán đơn hàng " + newTxnRef);
             params.put("vnp_OrderType", "other");
 
             params.put("vnp_Locale", "vn"); //locale: hiển thị giao diện cho người dùng bằng tiếng Việt (vn) hay tiếng Anh (en)
@@ -56,7 +59,7 @@ public class VNPayUtil {
             params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
 
             // IP client
-            params.put("vnp_IpAddr", request.getRemoteAddr()); //(Máy cá nhân): getRemoteAddr() thường trả về 0:0:0:0:0:0:0:1 hoặc 127.0.0.1. VNPay Sandbox chấp nhận giá trị này để test.
+            params.put("vnp_IpAddr", getIpAddress(request)); //(Máy cá nhân): getRemoteAddr() thường trả về 0:0:0:0:0:0:0:1 hoặc 127.0.0.1. VNPay Sandbox chấp nhận giá trị này để test.
 
             // 🔥 timestamp
             params.put("vnp_CreateDate", getCurrentTime());
@@ -277,6 +280,17 @@ public class VNPayUtil {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
         return LocalDateTime.now().plusMinutes(15).format(formatter);
+    }
+
+    private String getIpAddress(
+            HttpServletRequest request
+    ) {
+        String ip = request.getHeader("X-FORWARDED-FOR");
+
+        if (ip == null || ip.isEmpty()) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
     }
 }
 

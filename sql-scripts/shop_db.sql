@@ -87,9 +87,9 @@ CREATE TABLE users_roles(
 -- users nào có role nào
 
 INSERT INTO users_roles(user_id,role_id) VALUES
-(1,1),              -- thaonhi -> CUSTOMER
-(2,1),(2,2),        -- lananh -> STAFF cũng là CUSTOMER
-(3,1),(3,2),(3,3);  -- chantaro -> ADMIN full quyền
+(1,1),        -- thaonhi  -> CUSTOMER
+(2,2),        -- lananh   -> STAFF
+(3,2),(3,3);  -- chantaro -> ADMIN, STAFF
 
 
 

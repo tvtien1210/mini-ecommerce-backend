@@ -1,7 +1,9 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.entity;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CurrencyCode;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
@@ -112,6 +114,10 @@ public class Cart {
     @Column(nullable = false, precision = 12, scale = 2)
     // precision=12, scale=2 → max 9999999999.99
     private BigDecimal totalPrice = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false,length = 3)
+    private CurrencyCode currency = CurrencyCode.VND;
 
     @Setter(AccessLevel.NONE)
     @CreationTimestamp

@@ -2,6 +2,7 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.dto.cart;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.cartitem.CartItemDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CurrencyCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class CartDTO {
     private List<CartItemDTO> cartItems;
     private CartStatusCode cartStatusCode;
     private BigDecimal totalPrice;
+    private CurrencyCode currency;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

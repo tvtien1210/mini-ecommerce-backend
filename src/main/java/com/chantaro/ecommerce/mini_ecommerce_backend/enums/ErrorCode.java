@@ -173,6 +173,15 @@ public enum ErrorCode {
     // CART / カート関連
     // =====================================================
 
+
+    // Không tìm thấy cart
+    // カートが存在しない
+    CART_NOT_FOUND(
+            8000,
+            "Cart not found",
+            HttpStatus.NOT_FOUND
+    ),
+
     CART_ITEM_NOT_FOUND(
             8001,
             "Cart item not found",
@@ -204,6 +213,8 @@ public enum ErrorCode {
             "Access denied",
             HttpStatus.FORBIDDEN
     ),
+
+
 
     // =====================================================
     // CATEGORY / カテゴリ関連

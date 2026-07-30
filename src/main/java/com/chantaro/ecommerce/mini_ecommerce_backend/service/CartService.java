@@ -8,6 +8,7 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.entity.CartItem;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CurrencyCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.CartMapper;
@@ -129,6 +130,7 @@ public class CartService {
                     .user(user)
                     .status(CartStatusCode.ACTIVE)
                     .totalPrice(BigDecimal.ZERO)
+                    .currency(CurrencyCode.VND)
                     .build();
 
             return cartRepository.save(newCart);

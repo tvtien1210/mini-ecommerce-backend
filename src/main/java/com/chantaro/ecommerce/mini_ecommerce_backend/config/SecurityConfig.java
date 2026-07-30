@@ -1,6 +1,7 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.config;
 
 // ===== Import JWT =====
+
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtFilter;
 
 
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 // ===== Import Spring Security =====
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -105,8 +107,10 @@ public class SecurityConfig {
                 // Vì đây là REST API (không dùng form)
                 .csrf(csrf -> csrf.disable())
 
+
                 // ===== PHÂN QUYỀN =====
                 .authorizeHttpRequests(auth -> auth
+
 
                         // ===== PUBLIC =====
                         .requestMatchers("/").permitAll()
@@ -116,39 +120,132 @@ public class SecurityConfig {
                         // API login/register → không cần token
                         .requestMatchers("/api/auth/**").permitAll()
 
+
                         // ===== USER API =====
-                        // phải có role mới vào được
+                        // CUSTOMER, STAFF, ADMIN đều được xem user API
                         .requestMatchers("/api/users/**")
                         .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
 
+
                         // ===== PRODUCT API =====
-                        // phải có role mới vào được
-                        .requestMatchers("/api/products/**")
+
+                        // Ai cũng có thể xem sản phẩm GET
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/products/**"
+                        )
                         .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
 
-                        // ===== ADMIN =====
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                        // ===== STAFF =====
+                        // ADMIN tạo sản phẩm POST
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/products/**"
+                        )
+                        .hasRole("ADMIN")
+
+
+                        // ADMIN sửa sản phẩm PUT
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/products/**"
+                        )
+                        .hasRole("ADMIN")
+
+
+                        // ADMIN xóa sản phẩm DELETE
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/products/**"
+                        )
+                        .hasRole("ADMIN")
+
+
+                        // ===== ADMIN PAGE =====
+                        .requestMatchers("/admin/**")
+                        .hasRole("ADMIN")
+
+
+                        // ===== STAFF PAGE =====
                         .requestMatchers("/staff/**")
                         .hasAnyRole("STAFF", "ADMIN")
 
-                        // ===== ORDER =====
-                        .requestMatchers("/api/orders/my").hasRole("CUSTOMER")
-                        .requestMatchers("/api/orders/**").hasAnyRole("ADMIN", "STAFF")
-                        .requestMatchers("/api/orders/{id}/status").hasAnyRole("ADMIN","STAFF")
 
-                        // public resources
+                        // ===== ORDER API =====
+
+                        // Customer checkout
+                        // Cart -> Order
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/orders/checkout"
+                        )
+                        .hasRole("CUSTOMER")
+
+
+                        // Customer xem order của mình
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/orders/my"
+                        )
+                        .hasRole("CUSTOMER")
+
+
+                        // Staff/Admin cập nhật trạng thái order
+                        // Ví dụ:
+                        // PUT /api/orders/1/status
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/orders/*/status"
+                        )
+                        .hasAnyRole("STAFF", "ADMIN")
+
+
+                        // Staff/Admin xem tất cả order
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/orders/**"
+                        )
+                        .hasAnyRole("STAFF", "ADMIN")
+
+
+                        // ===== CART API =====
+
+                        // Chỉ customer được:
+                        // add cart
+                        // update quantity
+                        // remove item
+                        .requestMatchers("/api/cart/**")
+                        .hasRole("CUSTOMER")
+
+                        // VNPay callback
+                        .requestMatchers(
+                                "/api/payment/return",
+                                "/api/payment/ipn"
+                        )
+                        .permitAll()
+
+
+                        // ===== PUBLIC RESOURCES =====
                         .requestMatchers(
                                 "/images/**",
                                 "/css/**",
                                 "/js/**",
                                 "/favicon.ico"
-                        ).permitAll()
+                        )
+                        .permitAll()
+
 
                         // ===== CÒN LẠI =====
-                        .anyRequest().authenticated()
+                        .anyRequest()
+                        .authenticated()
                 )
+
+
+                // ===== JWT FILTER =====
+                // Request đi qua JWT trước
+                // Nếu token hợp lệ:
+                // SecurityContext sẽ có Authentication
+
 
                 // ===== ĐĂNG KÝ PROVIDER =====
                 // → dùng DaoAuthenticationProvider của mình
@@ -156,7 +253,6 @@ public class SecurityConfig {
                 //    1. gọi UserDetailsService
                 //    2. lấy user từ DB
                 //    3. check password bằng BCrypt
-
 
 
                 // ===== JWT FILTER =====
@@ -169,3 +265,26 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
+
+/*CUSTOMER
+ |
+ | POST /api/cart/items
+ | POST /api/orders/checkout
+ ↓
+ORDER
+
+
+STAFF
+ |
+ | GET /api/orders
+ | PUT /api/orders/{id}/status
+ ↓
+PROCESS ORDER
+
+
+ADMIN
+ |
+ | CRUD Product
+ | Manage User
+ | View/Update Order*/

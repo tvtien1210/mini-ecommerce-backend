@@ -44,6 +44,11 @@ public class OrderItem {
     // map với cột product_id (NOT NULL)
     private Product product;
 
+    @NotNull
+    @Column(nullable = false)
+    private String productName;
+
+
     @NotNull // validate: không được null
     @Positive // validate: phải > 0
     @Column(nullable = false)
@@ -57,14 +62,17 @@ public class OrderItem {
     // DECIMAL(10,2): tối đa 10 chữ số, 2 số sau dấu phẩy
     private BigDecimal price;
 
+
+
     // constructor rỗng (JPA bắt buộc phải có)
     public OrderItem() {
     }
 
     // constructor tiện dùng khi tạo object
-    public OrderItem(Order order, Product product, Integer quantity, BigDecimal price) {
-        this.order = order;
-        this.product = product;
+
+    public OrderItem(Long id, String productName, Integer quantity, BigDecimal price) {
+        this.id = id;
+        this.productName = productName;
         this.quantity = quantity;
         this.price = price;
     }

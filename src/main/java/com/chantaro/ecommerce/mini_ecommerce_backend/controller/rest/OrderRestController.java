@@ -1,9 +1,12 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.checkout.CheckoutDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.order.OrderDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.orderstatus.UpdateOrderStatusRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.OrderService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,12 +35,19 @@ public class OrderRestController {
 //    }
 
     @PostMapping("/checkout")
-    public OrderDTO checkoutOrder() {
-        return orderService.checkoutOrder();
+    public CheckoutDTO checkout(
+            HttpServletRequest request
+    ) {
+
+        return orderService.checkoutOrder(request);
     }
 
-    @PostMapping("/{id}/pay")
-    public void paidOrder(@PathVariable Long orderId){
+
+    @PostMapping("/{orderId}/pay")
+    public void paidOrder(
+            @PathVariable Long orderId
+    ) {
+
         orderService.paidOrder(orderId);
     }
 
@@ -50,6 +60,18 @@ public class OrderRestController {
     public String deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
         return "Deleted order by id =" + id;
+    }
+
+    @PutMapping("/{id}/cancel")
+    public OrderDTO cancelOrder(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+
+        return orderService.cancelOrder(
+                id,
+                authentication
+        );
     }
 
     @DeleteMapping("/{orderId}/items/{itemId}")

@@ -1,5 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.entity;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CurrencyCode;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -45,6 +46,10 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     // DECIMAL(10,2): tối đa 10 chữ số, 2 số sau dấu phẩy
     private BigDecimal price;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 3, nullable = false)
+    private CurrencyCode currency = CurrencyCode.VND;
 
     @NotNull
     @Min(0)

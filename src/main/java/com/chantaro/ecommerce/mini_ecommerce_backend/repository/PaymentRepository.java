@@ -1,7 +1,7 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.repository;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Payment;
-import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatus;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatusCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,7 +19,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     // dùng cho cron job (tác vụ theo lịch trình): tìm payment hết hạn
     List<Payment> findByStatusAndExpiredAtBefore(
-            PaymentStatus status,
+            PaymentStatusCode status,
             LocalDateTime time
     );
 

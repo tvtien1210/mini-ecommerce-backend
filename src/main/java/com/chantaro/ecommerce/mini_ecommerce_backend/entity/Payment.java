@@ -1,6 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.entity;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatus;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatusCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,7 +46,7 @@ public class Payment {
     // PENDING / SUCCESS / FAILED
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus status;
+    private PaymentStatusCode status;
 
     // Thời điểm tạo payment
     // auto set khi insert DB
@@ -62,7 +62,7 @@ public class Payment {
     private LocalDateTime expiredAt;
 
     // Constructor dùng khi tạo payment mới
-    public Payment(Order order, BigDecimal amount, PaymentStatus status) {
+    public Payment(Order order, BigDecimal amount, PaymentStatusCode status) {
         this.order = order;
         this.amount = amount;
         this.status = status;

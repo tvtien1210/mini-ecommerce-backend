@@ -2,8 +2,8 @@ vnpay:
   tmnCode: ${VNP_TMN_CODE}
   hashSecret: ${VNP_HASH_SECRET}
   url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-  returnUrl: http://localhost:8080/api/payment/return
-  ipnUrl: http://localhost:8080/api/payment/ipn
+  returnUrl: https://cartoon-nail-underfed.ngrok-free.dev/api/payment/return
+  ipnUrl: https://cartoon-nail-underfed.ngrok-free.dev/api/payment/ipn
 
 
 
@@ -12,5 +12,6 @@ vnpay:
   #// -tao chu ky (sign)
   #// -verify token khi client gui lên
 
-  jwt:
-    secret: ${JWT_SECRET}
+jwt:
+  secret: ${JWT_SECRET}
+
