@@ -80,7 +80,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // txnRef
         // 決済トランザクション参照ID
-        String txnRef = params.get("vnp_txnRef");
+        String txnRef = params.get("vnp_TxnRef");
 
         Payment payment = paymentRepository.findByTxnRef(txnRef)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_SIGNATURE));

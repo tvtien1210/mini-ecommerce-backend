@@ -4,8 +4,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.config.VNPayConfig;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Payment;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -27,6 +25,8 @@ public class VNPayUtil {
     // =========================
     public String buildPaymentUrl(BigDecimal newAmount , String newTxnRef, HttpServletRequest request) {
 
+        System.out.println("===== BUILD VNPay URL START =====");
+
         try {
 
 
@@ -41,6 +41,7 @@ public class VNPayUtil {
 
             params.put("vnp_Version", "2.1.0");
             params.put("vnp_Command", "pay"); //lenh: pay
+
             //Merchant code lấy từ VNPay
             params.put("vnp_TmnCode", vnPayConfig.getTmnCode());
 
@@ -57,6 +58,7 @@ public class VNPayUtil {
             params.put("vnp_Locale", "vn"); //locale: hiển thị giao diện cho người dùng bằng tiếng Việt (vn) hay tiếng Anh (en)
 
             params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
+            params.put("vnp_IpnUrl", vnPayConfig.getIpnUrl());
 
             // IP client
             params.put("vnp_IpAddr", getIpAddress(request)); //(Máy cá nhân): getRemoteAddr() thường trả về 0:0:0:0:0:0:0:1 hoặc 127.0.0.1. VNPay Sandbox chấp nhận giá trị này để test.
@@ -104,7 +106,9 @@ public class VNPayUtil {
             // đính chữ ký bảo mật vào request để VNPay verify
             query.append("&vnp_SecureHash=").append(secureHash);
 
-            return vnPayConfig.getUrl() + "?" + query;
+            String paymentUrl = vnPayConfig.getUrl() + "?" + query;
+            System.out.println("payment url : " + paymentUrl);
+            return paymentUrl;
 
         } catch (Exception e) {
             throw new RuntimeException("Error creating VNPay URL", e);
@@ -119,6 +123,10 @@ public class VNPayUtil {
         try {
             // 🔥 lấy hash từ VNPay
             String receivedHash = params.get("vnp_SecureHash");
+
+            if (receivedHash == null || receivedHash.isEmpty()) {
+                return false;
+            }
 
             // remove để build lại hash
             Map<String, String> clone = new HashMap<>(params);
@@ -152,7 +160,12 @@ public class VNPayUtil {
                     hashData.toString()
             );
 
-            return calculatedHash.equals(receivedHash);
+            System.out.println("Received Hash : " + receivedHash);
+            System.out.println("Calculated Hash: " + calculatedHash);
+            System.out.println("Hash Data      : " + hashData);
+
+            //hash hex không phân biệt hoa thường nên dùng IgnoreCase
+            return calculatedHash.equalsIgnoreCase(receivedHash);
 
         } catch (Exception e) {
             return false;
@@ -196,7 +209,7 @@ public class VNPayUtil {
             );
 
 
-            // Convert bytes hash -> hex string
+            // Convert bytes hash -> hex stringipn
             // ví dụ:
             // [12, 55, -1]
             // =>

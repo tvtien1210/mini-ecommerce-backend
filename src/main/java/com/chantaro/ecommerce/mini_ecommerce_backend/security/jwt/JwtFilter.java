@@ -24,6 +24,23 @@ public class JwtFilter extends OncePerRequestFilter {
     public JwtFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService) {
         this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
+
+
+    }
+
+
+    //shouldNotFilter() là method của OncePerRequestFilter.
+    //Tránh Spring Security vẫn gọi JwtFilter trước, sau đó mới tới bước Authorization.
+    //Ví dụ như ipn không cần filter mà filter vẫn gọi -> filter không catch(sẽ thành ExpiredJwtException) -> request chết luôn
+    //Nếu trả về true -> Spring không gọi doFilterInternal() nữa.
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String path = request.getServletPath();
+
+        return path.equals("/api/payment/ipn")
+                || path.equals("/api/payment/return")
+                || path.startsWith("/api/auth/");
     }
 
 
@@ -35,19 +52,47 @@ public class JwtFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             //neu co (true) lay token, (cat 7 ky substring Bearer+daucach)
             String token = header.substring(7);
-            // Lay username tu token
-            // Mặc dù Token là hợp lệ về mặt chữ ký, nhưng Server vẫn cần kiểm tra xem User đó còn tồn tại trong hệ thống hay không.
-            String username = jwtService.extractUsername(token);
-            // check username + chưa authenticate
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Load user tu db
-                UserDetails user = customUserDetailsService.loadUserByUsername(username);
-                // Tao object xac thuc, nap quyen han (Authorities/Roles)
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                // Set thông tin user vào Spring Security (SecurityContext) setAuthentication(auth), vd Anh nay la Admin, cho anh ay vao,"Đã xác thực" (Authenticated)
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            try {
+
+                // Lấy username từ JWT
+                String username = jwtService.extractUsername(token);
+
+                // Chỉ authenticate nếu request chưa có Authentication
+                if (username != null &&
+                        SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                    // Lấy thông tin user mới nhất từ Database
+                    UserDetails user =
+                            customUserDetailsService.loadUserByUsername(username);
+
+                    // Kiểm tra token:
+                    // - Username trong token có khớp với DB không
+                    // - Token còn hạn sử dụng hay không
+                    if (jwtService.isTokenValid(token, user)) {
+
+                        //null là vì case này token của user này vẫn còn hạn, nên chỉ cần xác thực qua user + token thôi, không cần password nữa nên pw = null
+                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+                }
+
+                //Dùng try catch để:
+
+                //Nếu token còn hạn code sẽ dừng tại đây
+                //---------
+
+                //Nếu token hết hạn, sẽ catch và chạy tiếp filterChain.doFilter(request, response);
+                //Lúc này SecurityContext không có Authentication, Request này chưa đăng nhập, Spring sẽ tự trả:401 Unauthorized
+                //Tránh trường hợp JWT hết hạn là request sẽ trả về 500 Internal Server Error (lỗi máy chủ nội bộ) thay vì 401 Unauthorized (chưa xác thực)
+            } catch (Exception e) {
+                // Token không hợp lệ thì bỏ qua.
+                // Không throw -> tránh lộ thông tin
             }
         }
         filterChain.doFilter(request, response);
     }
+
+
 }
+

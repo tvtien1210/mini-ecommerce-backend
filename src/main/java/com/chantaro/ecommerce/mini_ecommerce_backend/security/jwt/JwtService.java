@@ -27,7 +27,7 @@ public class JwtService {
 
 
     // TẠO ACCESS TOKEN (thời gian ngắn: 15 phút)
-    public String generateAccessToken(UserDetails user){
+    public String generateAccessToken(UserDetails user) {
 
         return Jwts.builder()
 
@@ -37,7 +37,7 @@ public class JwtService {
 
                 // thêm thông tin roles vào token (custom field)
                 // ví dụ: ROLE_USER, ROLE_ADMIN
-                .claim("roles", user.getAuthorities().stream().map(auth->auth.getAuthority()).toList())
+                .claim("roles", user.getAuthorities().stream().map(auth -> auth.getAuthority()).toList())
 
                 // set thời gian hết hạn (15 phút)
                 // nếu quá hạn → token không dùng được
@@ -53,7 +53,7 @@ public class JwtService {
 
 
     // TẠO REFRESH TOKEN (thời gian dài: 7 ngày)
-    public String generateRefreshToken(UserDetails user){
+    public String generateRefreshToken(UserDetails user) {
 
         return Jwts.builder()
 
@@ -72,7 +72,7 @@ public class JwtService {
 
 
     //  LẤY USERNAME TỪ TOKEN
-    public String extractUsername(String token){
+    public String extractUsername(String token) {
 
         // parse token (giải mã + verify chữ ký)
         return Jwts.parser()
@@ -89,5 +89,48 @@ public class JwtService {
 
                 // lấy subject (username)
                 .getSubject();
+    }
+
+    // Kiểm tra token có hợp lệ hay không
+    // Điều kiện:
+    // 1. Username trong token phải trùng với user trong DB
+    // 2. Token chưa hết hạn
+    public boolean isTokenValid(String token, UserDetails user) {
+
+        return extractUsername(token).equals(user.getUsername())
+                && !isTokenExpired(token);
+    }
+
+
+    // Kiểm tra token đã hết hạn chưa
+    // Nếu thời gian hết hạn nhỏ hơn thời điểm hiện tại
+    // => token hết hạn
+    private boolean isTokenExpired(String token) {
+
+        return extractExpiration(token)
+                .before(new Date());
+    }
+
+    // Lấy thời gian hết hạn (exp) từ JWT
+    // JWT chứa các thông tin như:
+    // sub : username
+    // exp : expiration time
+    // roles : ROLE_ADMIN,...
+    // Method này parse JWT rồi lấy trường exp
+    private Date extractExpiration(String token) {
+
+        return Jwts.parser()
+
+                // dùng secret key để verify chữ ký JWT
+                .setSigningKey(key)
+
+                // parse JWT
+                .parseClaimsJws(token)
+
+                // lấy phần payload (Claims)
+                .getBody()
+
+                // lấy trường expiration
+                .getExpiration();
     }
 }
