@@ -9,7 +9,6 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.PaymentMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.OrderRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.PaymentRepository;
-import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.util.VNPayUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -28,7 +27,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
-    private final ProductRepository productRepository;
+    private final StockService stockService;
     private final VNPayUtil vnPayUtil;
 
     // 1. CREATE PAYMENT
@@ -36,7 +35,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional //Nếu save Payment thành công nhưng build URL lỗi thì: rollback
     public PaymentDTO createPaymentUrl(Long orderId,
-                                   HttpServletRequest request) {
+                                       HttpServletRequest request) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
@@ -63,7 +62,7 @@ public class PaymentServiceImpl implements PaymentService {
         String paymentUrl = vnPayUtil.buildPaymentUrl(savedPayment.getAmount(), savedPayment.getTxnRef(), request);
 
 
-        return PaymentMapper.toDTO(savedPayment,paymentUrl);
+        return PaymentMapper.toDTO(savedPayment, paymentUrl);
     }
 
     // 2. HANDLE IPN
@@ -132,45 +131,15 @@ public class PaymentServiceImpl implements PaymentService {
 
             // trừ stock thật
             // 実在庫を減算
-            for (OrderItem item : order.getOrderItems()) {
-
-                Product product = item.getProduct();
-
-                product.setStock(product.getStock() - item.getQuantity());
-
-                product.setReservedStock(
-                        product.getReservedStock() - item.getQuantity()
-                );
-            }
+            stockService.confirmReservedStock(order);
 
         } else {
+            payment.setStatus(PaymentStatusCode.FAILED);
 
             // fail
             // 決済失敗
-            payment.setStatus(PaymentStatusCode.FAILED);
+            stockService.releaseReservedStock(order);
 
-            handlePaymentFailed(order);
-        }
-    }
-
-    // 3. PAYMENT FAILED
-    // 3. 決済失敗処理
-    @Override
-    public void handlePaymentFailed(Order order) {
-
-        order.setStatus(OrderStatusCode.CANCELLED);
-
-        // release reserve stock
-        // Giải phóng số lượng hàng đã giữ trước
-        //
-        // 予約在庫を解放
-        for (OrderItem item : order.getOrderItems()) {
-
-            Product product = item.getProduct();
-
-            product.setReservedStock(
-                    product.getReservedStock() - item.getQuantity()
-            );
         }
     }
 
@@ -204,7 +173,8 @@ public class PaymentServiceImpl implements PaymentService {
             // 1つのorderに複数回の決済試行が存在可能
             Order order = payment.getOrder();
 
-            // Nếu order đã PAID rồi thì bỏ qua
+            // Nếu order đã PAID rồi thì "bỏ qua" --> vì có trường hợp khách expired nhưng khách hàng bấm thanh toán lại luôn, và status thành công trả về Paid
+            // Lúc PAID mà không check if PAID, không continue, thì code sẽ chạy tiếp phần releaseServerdStock, gây sai database
             // Tránh trường hợp:
             // - payment cũ bị expired
             // - nhưng payment retry mới đã thanh toán thành công
@@ -228,10 +198,13 @@ public class PaymentServiceImpl implements PaymentService {
             // - 注文状態更新
             // - 予約在庫解放
             // - 通知送信など
-            handlePaymentFailed(order);
+
+            payment.setStatus(PaymentStatusCode.FAILED);
+            order.setStatus(OrderStatusCode.CANCELLED);
+            stockService.releaseReservedStock(order);
+
         }
     }
-
     @Override
     public boolean verify(Map<String, String> params) {
         return vnPayUtil.verify(params);

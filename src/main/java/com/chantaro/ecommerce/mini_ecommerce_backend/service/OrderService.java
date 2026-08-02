@@ -224,8 +224,16 @@ public class OrderService {
         Order saveOrder = orderRepository.save(order);
 
 
+        //Trong processStockWithRetry đã có xử lý reserverStock
+        processStockWithRetry(order);
+
+
         //Tạo Payment - Status Pending
         PaymentDTO paymentDTO = paymentServiceImpl.createPaymentUrl(saveOrder.getId(), request);
+
+        cart.setStatus(CartStatusCode.CHECKED_OUT);
+        order.setStatus(OrderStatusCode.PAID);
+
 
 
         // ===============================
@@ -437,7 +445,7 @@ public class OrderService {
 
     //Xử lý trừ tồn kho với cơ chế retry khi xảy ra optimistic locking
     // 楽観ロック失敗時リトライ処理
-    public void processStockWithRetry(Cart cart) {
+    public void processStockWithRetry(Order order) {
 
         int maxRetry = 3;   // Số lần retry tối đa
         // 最大リトライ回数
@@ -455,7 +463,7 @@ public class OrderService {
 
                 // (có thể throw exception)
                 // 例外発生可能
-                stockService.processStock(cart);
+                stockService.reserveStock(order);
 
                 return; // Nếu thành công thì thoát luôn
                 // 成功時終了
@@ -508,6 +516,7 @@ public class OrderService {
             }
         }
     }
+
 
 
     public void paidOrder(Long orderId) {

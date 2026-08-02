@@ -56,12 +56,6 @@ public class PaymentRestController {
     @GetMapping("/ipn")
     public String vnPayIPN(@RequestParam Map<String, String> params) {
 
-        boolean success = paymentService.verify(params);
-
-        if (!success) {
-            return "INVALID SIGNATURE";
-        }
-
         paymentService.handleVNPayIPN(params);
 
         return "OK";

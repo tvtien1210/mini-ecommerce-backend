@@ -1,8 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Cart;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.CartItem;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
@@ -26,65 +24,100 @@ public class StockService {
 
     //Chạy trong 1 transaction (atomic: tất cả thành công hoặc rollback hết)
     // 1つの Transaction 内で実行（atomic: 全成功または全 rollback）
+
+
     @Transactional
-    public void processStock(Cart cart) {
+// トランザクション制御
+    public void reserveStock(Order order) {
 
-        // Duyệt từng item trong giỏ hàng
-        // カート内の各 item をループ処理
-        for (CartItem cartItem : cart.getCartItems()) {
+        // Duyệt toàn bộ sản phẩm trong Order
+        // 注文商品のループ
+        for (OrderItem orderItem : order.getOrderItems()) {
 
-            // Lấy product mới nhất từ DB (quan trọng để đảm bảo stock current)
-            // DB から最新の Product 情報を取得
-            // （最新の在庫状態を保証するため重要）
-            Product product = productRepository.findById(
-                    cartItem.getProduct().getId()
-            ).orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+            // Lấy Product hiện tại từ Persistence Context
+            // (đã được Hibernate quản lý)
+            // Managed状態の商品取得
+            Product product = orderItem.getProduct();
 
-            // Nếu không tìm thấy product → ném exception
-            // Product が存在しない場合 → Exception を throw
+            // Số lượng còn có thể bán
+            // = Tồn kho thực tế - Hàng đang được giữ
+            // 販売可能在庫数を計算
+            int available =
+                    product.getStock() - product.getReservedStock();
 
-            int quantity = cartItem.getQuantity();
+            // Số lượng khách đặt mua
+            // 注文数量取得
+            int quantity = orderItem.getQuantity();
 
-            // Kiểm tra quantity hợp lệ
-            // quantity が有効かチェック
+            // Không chấp nhận số lượng <= 0
+            // 数量不正チェック
             if (quantity <= 0) {
                 throw new BusinessException(ErrorCode.INVALID_QUANTITY);
             }
 
-            // Kiểm tra tồn kho có đủ không
-            // 在庫数が足りるかチェック
-            if (product.getStock() < quantity) {
-
-                // Không đủ hàng → fail toàn bộ transaction
-                // 在庫不足の場合 → Transaction 全体を失敗させる
+            // Kiểm tra tồn kho có đủ để giữ hàng không
+            // 在庫不足チェック
+            if (available < quantity) {
                 throw new BusinessException(ErrorCode.OUT_OF_STOCK);
             }
 
-            // Trừ tồn kho
-            // 在庫を減算
-            product.setStock(
-                    product.getStock() - quantity
+            // Giữ trước số lượng hàng cho đơn hàng này
+            // Ví dụ:
+            // stock = 10
+            // reservedStock = 3
+            // quantity = 2
+            //
+            // Sau khi reserve:
+            // stock = 10
+            // reservedStock = 5
+            // available = 5
+            //
+            // 注文分の在庫を一時確保
+            product.setReservedStock(
+                    product.getReservedStock() + quantity
             );
 
-            // Lưu lại DB
-            // DB に保存
-            productRepository.save(product);
+            // Không cần gọi save()
+            // save()不要
 
-            // Có @Version → nếu concurrent update → sẽ throw OptimisticLock exception
-            // @Version がある場合、
-            // 同時更新（concurrent update）が発生すると
-            // OptimisticLock Exception が throw される
+            // Product đang ở trạng thái Managed
+            // Managedエンティティ
 
-            //Điều kiện để @Version hoạt động đúng
-            //@Version が正しく動作する条件
-
-            //Entity phải được load từ DB (managed entity, tim product tu repository theo id)
-            //Entity は DB から取得された managed entity である必要がある
-            //（repository から id で取得した product など）
-
-            //Version sẽ tự tăng khi entity được update và flush xuống DB
-            //Entity 更新後、DB に flush される際に
-            // version は自動で increment される
+            // Hibernate sẽ tự sinh câu lệnh UPDATE
+            // khi Transaction được commit
+            // Commit時に自動UPDATE
         }
     }
+
+    @Transactional
+    public void confirmReservedStock(Order order) {
+
+        for (OrderItem item : order.getOrderItems()) {
+
+            Product product = item.getProduct();
+
+            product.setStock(
+                    product.getStock() - item.getQuantity()
+            );
+
+            product.setReservedStock(
+                    product.getReservedStock() - item.getQuantity()
+            );
+        }
+    }
+
+    @Transactional
+    public void releaseReservedStock(Order order) {
+
+        for (OrderItem item : order.getOrderItems()) {
+
+            Product product = item.getProduct();
+
+            product.setReservedStock(
+                    product.getReservedStock() - item.getQuantity()
+            );
+        }
+    }
+
+
 }

@@ -119,7 +119,7 @@ public class VNPayUtil {
     // 2. VERIFY SIGNATURE (IPN)
     // =========================
     public boolean verify(Map<String, String> params) {
-
+        System.out.println("VERIFY SIGNATURE (IPN)");
         try {
             // 🔥 lấy hash từ VNPay
             String receivedHash = params.get("vnp_SecureHash");

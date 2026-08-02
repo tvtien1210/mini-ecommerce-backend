@@ -13,8 +13,6 @@ public interface PaymentService {
 
     void handleVNPayIPN(Map<String, String> params);
 
-    void handlePaymentFailed(Order order);
-
     void handleExpiredPayments();
 
     boolean verify(Map<String, String> params);
