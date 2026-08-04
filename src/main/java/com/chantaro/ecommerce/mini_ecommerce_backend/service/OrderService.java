@@ -231,16 +231,12 @@ public class OrderService {
         //Tạo Payment - Status Pending
         PaymentDTO paymentDTO = paymentServiceImpl.createPaymentUrl(saveOrder.getId(), request);
 
-        cart.setStatus(CartStatusCode.CHECKED_OUT);
-        order.setStatus(OrderStatusCode.PAID);
-
-
 
         // ===============================
         // 9. Return DTO
         // ===============================
         // DTO返却
-        return CheckoutMapper.toDTO(saveOrder,paymentDTO, paymentDTO.getPaymentUrl());
+        return CheckoutMapper.toDTO(saveOrder,paymentDTO);
     }
 
 

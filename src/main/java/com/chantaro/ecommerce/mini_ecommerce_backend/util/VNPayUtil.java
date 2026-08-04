@@ -58,7 +58,6 @@ public class VNPayUtil {
             params.put("vnp_Locale", "vn"); //locale: hiển thị giao diện cho người dùng bằng tiếng Việt (vn) hay tiếng Anh (en)
 
             params.put("vnp_ReturnUrl", vnPayConfig.getReturnUrl());
-            params.put("vnp_IpnUrl", vnPayConfig.getIpnUrl());
 
             // IP client
             params.put("vnp_IpAddr", getIpAddress(request)); //(Máy cá nhân): getRemoteAddr() thường trả về 0:0:0:0:0:0:0:1 hoặc 127.0.0.1. VNPay Sandbox chấp nhận giá trị này để test.

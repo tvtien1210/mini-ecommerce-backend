@@ -17,9 +17,9 @@ public class PaymentRestController {
     private final PaymentService paymentService;
 
     @PostMapping("/create/")
-    public String vnPayCreate(Long orderId, HttpServletRequest request) {
-        paymentService.createPaymentUrl(orderId, request);
-        return "OK";
+    public PaymentDTO vnPayCreate(Long orderId, HttpServletRequest request) {
+        PaymentDTO paymentUrl = paymentService.createPaymentUrl(orderId, request);
+        return paymentUrl;
 
     }
 
