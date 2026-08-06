@@ -27,6 +27,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final CartService cartService;
     private final StockService stockService;
     private final VNPayUtil vnPayUtil;
 
@@ -133,6 +134,11 @@ public class PaymentServiceImpl implements PaymentService {
             // 実在庫を減算
             stockService.confirmReservedStock(order);
 
+            //Xoá đúng item đã checkout
+            //チェックアウトされたcartItemを削除
+            cartService.removeCheckedOutItems(order);
+
+
         } else {
             payment.setStatus(PaymentStatusCode.FAILED);
 
@@ -205,6 +211,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         }
     }
+
     @Override
     public boolean verify(Map<String, String> params) {
         return vnPayUtil.verify(params);

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import org.aspectj.weaver.ast.Or;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -35,6 +36,14 @@ public class Cart {
     // tránh load dư data (performance optimization)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+
+    //Cart chỉ còn nhiệm vụ:chứa sản phẩm người dùng đang chọn,chờ checkout
+    //bị xóa item sau khi thanh toán thành công nên không cần truy ngược(bỏ code này)
+    //mappedBy = "cart" nghĩa là:
+    //Cart không quản lý khóa ngoại, Order mới là bên giữ cart_id.
+    //@OneToOne(mappedBy = "cart")
+    //private Order order;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     // api remove = delete 🍺

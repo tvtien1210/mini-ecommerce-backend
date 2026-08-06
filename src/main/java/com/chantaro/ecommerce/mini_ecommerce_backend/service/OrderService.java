@@ -171,10 +171,11 @@ public class OrderService {
 
         order.setUser(user);
 
-        //createdAt tao tu dong o entity roi ma?
-        // createdAt自動生成
+        //Tạo cart_id trong order table, để xác định order_id <-> cart_id tham chiếu chính xác với nhau
+        //khi xoá sản phẩm -> check out sp nào thì chỉ xoá sp đã check out đó
+        order.setCart(cart);
 
-        // set status = PENDING
+        // Set status = PENDING
         // 初期ステータス設定
         order.setStatus(OrderStatusCode.PENDING);
 
@@ -193,12 +194,12 @@ public class OrderService {
             // 注文商品生成
             OrderItem orderItem = new OrderItem();
 
-            // set order
-            // 注文関連付け
-
             // set product
             // 商品設定
             orderItem.setProduct(product);
+
+            // set name
+            orderItem.setProductName(product.getName());
 
             // set quantity
             // 数量設定
@@ -208,11 +209,13 @@ public class OrderService {
             // スナップショット価格保存
             orderItem.setPrice(product.getPrice()); // đây là giá snapshot thời điểm đặt hàng cart.getProduct(), theo code tạo object này  Product product = cartItem.getProduct();
 
-            orderItem.setProductName(product.getName());
+
+            // Lưu lại cart_item gốc(order nào quản lý cart đó)
+            orderItem.setCartItemId(cartItem.getId());
+
 
             // add list orderItem vừa tìm được vào order
             // 注文へ商品追加
-
             // order.getItems().add(item);
             order.addItem(orderItem);
         }

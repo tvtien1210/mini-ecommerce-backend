@@ -3,10 +3,7 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.cart.CartDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.cartitem.CreateCartItemRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.cartitem.UpdateCartItemRequest;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Cart;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.CartItem;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CurrencyCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
@@ -26,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.net.BindException;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 // カート関連業務ロジックサービス
@@ -363,7 +362,58 @@ public class CartService {
         // 合計金額更新保存
         cartRepository.save(cart);
     }
+
+    //@Transactional ở đây để:
+    //Giữ Hibernate Persistence Context mở để theo dõi sự thay đổi dữ liệu thêm/xoá trong entity
+    //Cho phép Dirty Checking phát hiện CartItem bị xóa
+    //Commit thay đổi xuống database
+    //Đảm bảo nếu lỗi giữa chừng thì rollback
+
+    @Transactional
+    public void removeCheckedOutItems(Order order) {
+        //Lấy cart liên kết với Order hiện tại
+        //現在の注文に紐付くカートを取得
+        Cart cart = order.getCart();
+
+        //Nếu Order không có Cart thì không xử lý
+        //注文にカートが紐づいてない場合は処理終了
+        if (cart == null) {
+            return;
+        }
+
+        //Lấy danh sachs Id của các CartItem đã được check out
+        //OrderItem lưu lại cartItemId lúc tạo Order
+
+        //決済対象となったCartItemのId一覧を取得
+        //注文作成時にOrderItemへ保存したcartItemIdを利用する
+
+        Set<Long> checkOutCartItemIds = order.getOrderItems().stream()
+                //Lấy cartItemId từ từng OrderItem
+                //各OrderItemからcartItemIdを取得
+                //Với mỗi OrderItem trong danh sách order.getItems(), lấy ra giá trị cartItemId.
+                //.map(orderItem -> orderItem.getCartItemId())
+                .map(OrderItem::getCartItemId)
+
+                //Chuyển thành Set để tìm kiếm nhanh hơn
+                //重複を除外し、高速検索するためSet化
+                .collect(Collectors.toSet());
+
+        //Xoá khỏi Cart những cartItem đã được check out
+        //決済済みのcartItemをCartから削除する
+        //Không lấy trực tiếp cartItem qua user  Cart cart = order.getUser().getCart(); vì sau này
+        //có thể User có nhiều cart, User tạo order mới, Cart ACTIVE mới được tạo,lúc này rất dễ sai
+        cart.getCartItems().removeIf(cartItem ->
+
+                //Nếu CartItem hiện tại nằm trong danh sách đã checkout
+                //thì xoá khỏi Cart
+                //checkout済みの商品ならカートから削除
+                checkOutCartItemIds.contains(cartItem.getId())
+        );
+    }
+
+
 }
+
 
 /*
 throw new NotFoundException(...)

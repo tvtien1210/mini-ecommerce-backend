@@ -34,6 +34,10 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false) // khóa ngoại
     private User user;
 
+    @OneToOne
+    @JoinColumn(name = "cart_id")
+    private Cart cart;
+
     // ================== ORDER STATUS ==================
     // Nhiều Order có cùng một trạng thái (pending, shipped,...)
     @Enumerated(EnumType.STRING)
@@ -115,14 +119,14 @@ public class Order {
     public void addItem(OrderItem orderItem) {
 
         orderItems.add(orderItem);
-        // Thêm OrderItem vào danh sách items của Order
 
+        //Tthêm order_id vào OrderItems Table
         orderItem.setOrder(this);
         // Thiết lập quan hệ ngược lại:
         // gán Order hiện tại cho OrderItem
         // (this = Order hiện tại đang gọi method)
 
-        //giữ quan hệ 2 chiều, this = order hiện tại, setOrder(this) = gán item thuộc về order, order_id tự nhảy giá trị theo thứ tự
+        //Giữ quan hệ 2 chiều, this = order hiện tại, setOrder(this) = gán item thuộc về order, order_id tự nhảy giá trị theo thứ tự
         //Order (id=1)
         //Item (order_id = 1)
         //Item (order_id = 1)

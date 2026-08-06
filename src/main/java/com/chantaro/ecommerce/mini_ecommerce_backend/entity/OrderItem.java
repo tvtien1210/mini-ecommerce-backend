@@ -24,6 +24,10 @@ public class OrderItem {
     // Auto increment (DB tự tăng id)
     private Long id;
 
+    //Mục đích là tham chiếu đến đúng orderItem đã check out, để xoá cartItem trong giỏ hàng tương ứng một cách
+    //chính xác, không bị xoá nhầm sản phẩm khách vừa mới thêm ở tab khác trong khi đanh vnpay, tránh race condition(tình huống tương tranh gây ra kết quả sai lệch)
+    private Long cartItemId;
+
     // Tránh vòng lặp vô hạn (Order -> OrderItem -> Order ...)
     // @ToString.Exclude
     // @EqualsAndHashCode.Exclude
