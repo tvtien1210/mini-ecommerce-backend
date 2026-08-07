@@ -6,12 +6,13 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Payment;
 
 public class CheckoutMapper {
-    public static CheckoutDTO toDTO(Order order, PaymentDTO payment) {
+    public static CheckoutDTO toDTO(Order order, PaymentDTO paymentDTO) {
         return new CheckoutDTO(
                 order.getId(),
-                payment.getPaymentId(), order.getStatus(),
-                payment.getPaymentStatusCode(),
-                payment.getPaymentUrl()
+                paymentDTO.getPaymentId(),
+                order.getStatus(),
+                paymentDTO.getPaymentStatusCode(),
+                paymentDTO.getPaymentUrl()
         );
     }
 }

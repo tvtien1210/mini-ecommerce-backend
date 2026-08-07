@@ -1,6 +1,5 @@
-package com.chantaro.ecommerce.mini_ecommerce_backend.config;
+package com.chantaro.ecommerce.mini_ecommerce_backend.security.config;
 
-import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,11 +16,6 @@ public class VNPayConfig {
     private String url;
     private String returnUrl;
     private String ipnUrl;
-
-//    @PostConstruct
-//    public void checkConfig(){
-//        System.out.println("TMN CODE = " + tmnCode);
-//    }
 }
 
 //public class VNPayConfig {
@@ -50,8 +44,3 @@ public class VNPayConfig {
 //    // Đây mới là nơi CHÍNH để update trạng thái payment trong DB
 //    public static String vnp_IpnUrl = "http://localhost:8080/api/payment/ipn";
 //}
-
-//Dùng trong service
-//@Autowired
-//private VNPayConfig config;
-//config.getTmnCode();

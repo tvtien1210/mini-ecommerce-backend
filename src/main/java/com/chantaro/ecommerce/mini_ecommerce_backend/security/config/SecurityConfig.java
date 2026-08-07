@@ -1,9 +1,7 @@
-package com.chantaro.ecommerce.mini_ecommerce_backend.config;
+package com.chantaro.ecommerce.mini_ecommerce_backend.security.config;
 
 // ===== Import JWT =====
-
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtFilter;
-
 
 // ===== Import Spring =====
 import lombok.AllArgsConstructor;
@@ -248,11 +246,11 @@ public class SecurityConfig {
 
 
                 // ===== ĐĂNG KÝ PROVIDER =====
-                // → dùng DaoAuthenticationProvider của mình
-                // → khi login sẽ:
-                //    1. gọi UserDetailsService
-                //    2. lấy user từ DB
-                //    3. check password bằng BCrypt
+                // dùng DaoAuthenticationProvider của mình
+                // khi login sẽ:
+                //    -gọi UserDetailsService
+                //    -lấy user từ DB
+                //    -check password bằng BCrypt
 
 
                 // ===== JWT FILTER =====

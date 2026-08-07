@@ -3,7 +3,7 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.util;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.config.VNPayConfig;
+import com.chantaro.ecommerce.mini_ecommerce_backend.security.config.VNPayConfig;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

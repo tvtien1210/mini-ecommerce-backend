@@ -129,6 +129,12 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST
     ),
 
+    PAYMENT_NOT_FOUND(
+            5006,
+            "Payment not found",
+            HttpStatus.NOT_FOUND
+    ),
+
     // =====================================================
     // PRODUCT / 商品関連
     // =====================================================

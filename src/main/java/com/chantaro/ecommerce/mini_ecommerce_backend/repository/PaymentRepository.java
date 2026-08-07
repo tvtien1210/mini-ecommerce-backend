@@ -1,6 +1,8 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.repository;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Payment;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.OrderStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatusCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
@@ -25,4 +28,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     // check duplicate (idempotent nâng cao)
     boolean existsByTxnRef(String txnRef);
+
+    //Tìm Payment còn PENDING, lấy Payment PENDING mới nhất của Order
+    Optional<Payment> findFirstByOrderAndStatusOrderByCreatedAtDesc(Order order, PaymentStatusCode statusCode);
+
 }

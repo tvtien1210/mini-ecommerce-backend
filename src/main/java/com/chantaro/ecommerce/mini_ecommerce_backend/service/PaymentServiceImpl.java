@@ -2,6 +2,7 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.OrderStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatusCode;
@@ -129,6 +130,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             payment.setStatus(PaymentStatusCode.SUCCESS);
             order.setStatus(OrderStatusCode.PAID);
+            order.getCart().setStatus(CartStatusCode.CHECKED_OUT);
 
             // trừ stock thật
             // 実在庫を減算

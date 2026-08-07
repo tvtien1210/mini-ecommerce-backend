@@ -9,6 +9,7 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.enums.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.CheckoutMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.OrderMapper;
+import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.PaymentMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.util.VNPayUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +46,6 @@ public class OrderService {
     private final VNPayUtil vnPayUtil;
 
 
-
     @Autowired
     public OrderService(CartRepository cartRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, StockService stockService, PaymentRepository paymentRepository, PaymentServiceImpl paymentServiceImpl, VNPayUtil vnPayUtil) {
         this.cartRepository = cartRepository;
@@ -57,7 +58,6 @@ public class OrderService {
         this.paymentServiceImpl = paymentServiceImpl;
         this.vnPayUtil = vnPayUtil;
     }
-
 
 
     public List<OrderDTO> getAllOrders() {
@@ -145,6 +145,39 @@ public class OrderService {
 
         Cart cart = cartRepository.findByUserAndStatus(user, CartStatusCode.ACTIVE)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND));
+
+
+        //Dùng orElseThrow() khi tôi chắc chắn phải tồn tại ví dụ findbyId(id) or name, nếu không có system coi như bỏ, không logic trả exception kết thúc luôn
+        //Dùng orElse(null) hoặc isPresent() khi tôi chỉ muốn kiểm tra xem dữ liệu có tồn tại hay không.
+        Order pendingOrder = orderRepository.findByUserAndStatus(user, OrderStatusCode.PENDING)
+                .orElse(null);
+
+        //Trường hợp 1: Có Order PENDING:
+
+        if (pendingOrder != null) {
+            Payment pendingPayment = paymentRepository.findFirstByOrderAndStatusOrderByCreatedAtDesc(pendingOrder, PaymentStatusCode.PENDING)
+                    //Không thấy Payment nào đang PENDING -> ném luôn ngoại lệ -> dừng luôn
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+            //Có Order PENDING
+            //1. Payment còn hạn
+            if (pendingPayment != null && pendingPayment.getExpiredAt().isAfter(LocalDateTime.now())) {
+                String paymentUrl = vnPayUtil.buildPaymentUrl(pendingPayment.getAmount(), pendingPayment.getTxnRef(), request);
+                return CheckoutMapper.toDTO(pendingOrder, PaymentMapper.toDTO(pendingPayment, paymentUrl));
+            }
+
+            //2. Payment hết hạn
+            if (pendingPayment != null && pendingPayment.getExpiredAt().isBefore(LocalDateTime.now())) {
+                //Thay đổi status Payment sang FAILED hết hạn, lỗi không thể dùng link VNPay đã tạo để thanh toán nữa
+                pendingPayment.setStatus(PaymentStatusCode.FAILED);
+
+                //Tạo link VNpay mới với dữ liệu cũ
+                PaymentDTO paymentDTO = paymentServiceImpl.createPaymentUrl(pendingOrder.getId(), request);
+                return CheckoutMapper.toDTO(pendingOrder, paymentDTO);
+            }
+        }
+
+        //Trường hợp 2: Không có Order PENDING:
 
         // ===============================
         // 3. Validate cart
@@ -239,7 +272,7 @@ public class OrderService {
         // 9. Return DTO
         // ===============================
         // DTO返却
-        return CheckoutMapper.toDTO(saveOrder,paymentDTO);
+        return CheckoutMapper.toDTO(saveOrder, paymentDTO);
     }
 
 
@@ -515,7 +548,6 @@ public class OrderService {
             }
         }
     }
-
 
 
     public void paidOrder(Long orderId) {
