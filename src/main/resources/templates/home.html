@@ -1,66 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Chantaro Store</title>
 
     <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!--Link to style.css-->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
-    <!--Bootstrap Icons-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-
+    <!-- Bootstrap Icons -->
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 
 <body>
 
+<!-- ==============================
+     NAVBAR
+================================== -->
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+
     <div class="container d-flex align-items-center">
 
         <!-- Logo -->
-        <a class="navbar-brand fw-bold" href="#"> Chantaro</a>
+        <a class="navbar-brand fw-bold" th:href="@{/}">
+             Chantaro
+        </a>
 
-        <!-- Right side (luôn hiển thị) -->
+        <!-- Right side -->
         <div class="d-flex align-items-center gap-3 ms-auto order-lg-2">
-            <a class="nav-link text-white" href="#">
-                <i class="bi bi-person-circle"></i>
-            </a>
-            <a class="nav-link text-white" href="#">
+
+            <!-- Account -->
+            <div id="userInfo">
+                <a class="nav-link text-white" th:href="@{/login}">
+                    <i class="bi bi-person-circle"></i>
+                </a>
+            </div>
+
+
+            <!-- Cart -->
+            <a class="nav-link text-white" th:href="@{/cart}">
                 <i class="bi bi-cart3"></i>
             </a>
 
-            <!-- Toggler -->
-            <button class="navbar-toggler border-0"
+            <!-- Mobile menu button -->
+            <button
+                    class="navbar-toggler border-0"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#nav">
+                    data-bs-target="#nav"
+                    aria-controls="nav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+
                 <span class="navbar-toggler-icon"></span>
+
             </button>
+
         </div>
 
-        <!-- Menu -->
-        <div class="collapse navbar-collapse justify-content-center order-lg-1" id="nav">
+        <!-- Navigation -->
+        <div
+                class="collapse navbar-collapse justify-content-center order-lg-1"
+                id="nav">
+
             <ul class="navbar-nav">
+
                 <li class="nav-item">
-                    <a class="nav-link text-light" href="#">Home</a>
+                    <a class="nav-link text-light" href="#">
+                        Home
+                    </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link text-light" href="#">Products</a>
+                    <a class="nav-link text-light" href="#">
+                        Products
+                    </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link text-light" href="#">Category</a>
+                    <a class="nav-link text-light" href="#">
+                        Category
+                    </a>
                 </li>
+
             </ul>
+
         </div>
 
     </div>
+
 </nav>
 
 
-<!-- HERO -->
+<!-- ==============================
+     HERO
+================================== -->
 
 <section class="hero">
 
@@ -68,70 +112,233 @@
 
         <h1>Think Different</h1>
 
-        <p class="text-secondary">Premium Apple Products</p>
+        <p class="text-secondary">
+            Premium Apple Products
+        </p>
 
-        <button class="btn btn-primary btn-lg mt-3">Shop Now</button>
+        <button class="btn btn-primary btn-lg mt-3">
+            Shop Now
+        </button>
 
     </div>
 
 </section>
 
 
-<!-- PRODUCTS -->
+<!-- ==============================
+     PRODUCTS
+================================== -->
 
-<section class="container py-5">
+<section class="products-section container py-5">
 
-    <h2 class="text-center mb-5">Featured Products</h2>
+    <!-- Section title -->
+    <div class="text-center mb-5">
+
+        <h2>
+            Featured Products
+        </h2>
+
+    </div>
+
+
+    <!--
+        Product grid
+
+        Desktop  : 3 products / row
+        Tablet   : 2 products / row
+        Mobile   : 1 product / row
+    -->
 
     <div class="row g-4">
 
-        <!-- product -->
 
-        <div class="col-md-4">
+        <!-- ==============================
+             PRODUCT 1
+        ================================== -->
 
-            <div class="card text-center p-4">
+        <div class="col-12 col-sm-6 col-lg-4">
 
-                <img src="/images/iphone15pro.png" class="img-fluid mb-3">
+            <div class="card product-card text-center p-4 h-100"
+                 data-product-id="1">
 
-                <h5 class="text-light">iPhone 15 Pro</h5>
+                <!-- Product image -->
+                <div class="product-image mb-3">
 
-                <p class="price">$999</p>
+                    <img
+                            src="/images/iphone15pro.png"
+                            class="img-fluid"
+                            alt="iPhone 15 Pro">
 
-                <button class="btn btn-primary">Add to Cart</button>
+                </div>
+
+
+                <!-- Product information -->
+                <div class="product-info">
+
+                    <!-- Tên sản phẩm -->
+                    <h5 class="product-title text-light">
+                        iPhone 15 Pro
+                    </h5>
+
+                    <!-- Mô tả -->
+                    <p class="product-description text-secondary">
+                        Powerful performance with a premium titanium design.
+                    </p>
+
+                    <!-- Giá -->
+                    <p class="product-price text-primary fw-bold">
+                        22.990.000 VND
+                    </p>
+
+                    <!-- Action -->
+                    <button class="btn btn-primary">
+                        Add to Cart
+                    </button>
+
+                </div>
 
             </div>
 
         </div>
 
 
-        <div class="col-md-4">
+        <!-- ==============================
+             PRODUCT 2
+        ================================== -->
 
-            <div class="card text-center p-4">
+        <div class="col-12 col-sm-6 col-lg-4">
 
-                <img src="/images/macbookpro.png" class="img-fluid mb-3">
+            <div class="card product-card text-center p-4 h-100"
+                 data-product-id="2">
 
-                <h5 class="text-light">MacBook Pro</h5>
+                <!-- Product image -->
+                <div class="product-image mb-3">
 
-                <p class="price">$1999</p>
+                    <img
+                            src="/images/macbookpro.png"
+                            class="img-fluid"
+                            alt="MacBook Pro">
 
-                <button class="btn btn-primary">Add to Cart</button>
+                </div>
+
+
+                <!-- Product information -->
+                <div class="product-info">
+
+                    <!-- Tên sản phẩm -->
+                    <h5 class="product-title text-light">
+                        MacBook Pro
+                    </h5>
+
+                    <!-- Mô tả -->
+                    <p class="product-description text-secondary">
+                        Professional performance for work, creativity and development.
+                    </p>
+
+                    <!-- Giá -->
+                    <p class="product-price text-primary fw-bold">
+                        49.990.000 VND
+                    </p>
+
+                    <!-- Action -->
+                    <button class="btn btn-primary">
+                        Add to Cart
+                    </button>
+
+                </div>
 
             </div>
 
         </div>
 
 
-        <div class="col-md-4">
+        <!-- ==============================
+             PRODUCT 3
+        ================================== -->
 
-            <div class="card text-center p-4">
+        <div class="col-12 col-sm-6 col-lg-4">
 
-                <img src="/images/airpodspro.png" class="img-fluid mb-3">
+            <div class="card product-card text-center p-4 h-100"
+                 data-product-id="3">
 
-                <h5 class="text-light">AirPods Pro</h5>
+                <!-- Product image -->
+                <div class="product-image mb-3">
 
-                <p class="price">$249</p>
+                    <img
+                            src="/images/airpodspro.png"
+                            class="img-fluid"
+                            alt="AirPods Pro">
 
-                <button class="btn btn-primary">Add to Cart</button>
+                </div>
+
+
+                <!-- Product information -->
+                <div class="product-info">
+
+                    <!-- Tên sản phẩm -->
+                    <h5 class="product-title text-light">
+                        AirPods Pro
+                    </h5>
+
+                    <!-- Mô tả -->
+                    <p class="product-description text-secondary">
+                        Immersive sound with active noise cancellation.
+                    </p>
+
+                    <!-- Giá -->
+                    <p class="product-price text-primary fw-bold">
+                        6.490.000 VND
+                    </p>
+
+                    <!-- Action -->
+                    <button class="btn btn-primary">
+                        Add to Cart
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==============================
+             PRODUCT 4
+        ================================== -->
+
+        <div class="col-12 col-sm-6 col-lg-4">
+
+            <div class="card product-card text-center p-4 h-100"
+                 data-product-id="4">
+
+                <div class="product-image mb-3">
+
+                    <img
+                            src="/images/applewatch.png"
+                            class="img-fluid product-img-large"
+                            alt="Apple Watch">
+
+                </div>
+
+                <div class="product-info">
+
+                    <h5 class="product-title text-light">
+                        Apple Watch
+                    </h5>
+
+                    <p class="product-description text-secondary">
+                        Stay active, connected and healthy every day.
+                    </p>
+
+                    <p class="product-price text-primary fw-bold">
+                        12.990.000 VND
+                    </p>
+
+                    <button class="btn btn-primary">
+                        Add to Cart
+                    </button>
+
+                </div>
 
             </div>
 
@@ -143,25 +350,25 @@
 </section>
 
 
-<!-- FOOTER -->
+<!-- ==============================
+     FOOTER
+================================== -->
 
 <footer class="text-center py-4">
 
-    <p>© 2026 Chantaro Store</p>
+    <p class="mb-0">
+        © 2026 Chantaro Store
+    </p>
 
 </footer>
 
 
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/user-navbar.js"></script>
+<script src="/js/home.js"></script>
+
 
 </body>
 
 </html>
-
-
-<!--Tên sản phẩm-->
-<!--text-light-->
-<!--Giá-->
-<!--text-primary-->
-<!--Mô tả-->
-<!--text-secondary-->

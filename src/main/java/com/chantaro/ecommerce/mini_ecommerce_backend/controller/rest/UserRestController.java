@@ -7,10 +7,16 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.dto.update.UpdateUserReques
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.UserDTO;
 
 // import Service (chứa business logic)
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.UserMapper;
+import com.chantaro.ecommerce.mini_ecommerce_backend.repository.UserRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.UserService;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,16 +27,13 @@ import java.util.List;
 // Định nghĩa URL gốc cho tất cả API trong class này
 // => API đầy đủ sẽ là: /api/users
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserRestController {
 
     // Service để xử lý logic (không làm việc trực tiếp với DB)
     private final UserService userService;
+    private final UserRepository userRepository;
 
-    // Constructor injection (Spring sẽ tự inject UserService vào)
-    @Autowired
-    public UserRestController(UserService userService) {
-        this.userService = userService;
-    }
 
     // API GET /api/users
     // dùng để lấy danh sách tất cả user
@@ -49,6 +52,15 @@ public class UserRestController {
     @GetMapping("/{id}")
     public UserDTO getById(@PathVariable Long id) {
         return userService.getUserById(id);
+    }
+
+    @GetMapping("/me")
+    public UserDTO getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return UserMapper.toDTO(user);
     }
 
     @PostMapping

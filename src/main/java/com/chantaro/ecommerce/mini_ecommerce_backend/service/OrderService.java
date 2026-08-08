@@ -161,13 +161,15 @@ public class OrderService {
 
             //Có Order PENDING
             //1. Payment còn hạn
-            if (pendingPayment != null && pendingPayment.getExpiredAt().isAfter(LocalDateTime.now())) {
+            //if (pendingPayment != null && pendingPayment.getExpiredAt().isAfter(LocalDateTime.now())) : bỏ dòng pendingPayment != null vì
+            //lúc này pendingPayment chắc chắn khác null do có orElseThrow ở trên rồi
+            if (pendingPayment.getExpiredAt().isAfter(LocalDateTime.now())) {
                 String paymentUrl = vnPayUtil.buildPaymentUrl(pendingPayment.getAmount(), pendingPayment.getTxnRef(), request);
                 return CheckoutMapper.toDTO(pendingOrder, PaymentMapper.toDTO(pendingPayment, paymentUrl));
             }
 
             //2. Payment hết hạn
-            if (pendingPayment != null && pendingPayment.getExpiredAt().isBefore(LocalDateTime.now())) {
+            if (pendingPayment.getExpiredAt().isBefore(LocalDateTime.now())) {
                 //Thay đổi status Payment sang FAILED hết hạn, lỗi không thể dùng link VNPay đã tạo để thanh toán nữa
                 pendingPayment.setStatus(PaymentStatusCode.FAILED);
 

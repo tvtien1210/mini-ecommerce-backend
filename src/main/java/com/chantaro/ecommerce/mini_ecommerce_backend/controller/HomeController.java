@@ -10,5 +10,14 @@ public class HomeController {
         return "home";
     }
 
+    @GetMapping("/cart")
+    public String cart() {
+        return "cart";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
 
 }

@@ -120,9 +120,18 @@ public class SecurityConfig {
 
 
                         // ===== USER API =====
+
+                        //Endpoint cụ thể đặt trước endpoint rộng, User đã login là xem được
+                        //SecurityConfig cho phép JWT đi qua, api này phải yêu cầu login
+                        .requestMatchers("api/users/me").authenticated()
+
+
                         // CUSTOMER, STAFF, ADMIN đều được xem user API
                         .requestMatchers("/api/users/**")
                         .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
+
+
+
 
 
                         // ===== PRODUCT API =====
