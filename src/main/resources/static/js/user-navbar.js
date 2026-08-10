@@ -1,5 +1,5 @@
 //Lấy username
-console.log("USER NAVBAR LOADED");
+
 //Chờ toàn bọ HTML load xong
 //Sau khi DOM sẵn sàng thì  mới chạy code bên trong
 document
@@ -8,7 +8,7 @@ document
     //Lấy JWT accessToken đã lưu trong local
     //Nếu user chưa login thì sẽ là null
     const accessToken = localStorage.getItem("accessToken");
-    console.log("JWT accessToken =", accessToken)
+    //console.log("JWT accessToken =", accessToken)
 
     //Lấy vùng hiển thị thông tin user trên Navbar
     //home.html -> id="userInfo"
@@ -65,37 +65,19 @@ document
     userInfo.innerHTML=`
       <!-- Bootstrap dropdown -->
             <div class="dropdown">
-
-
-                <!--
-                    Nút account trên Navbar
-
-                    data-bs-toggle="dropdown"
-                    là Bootstrap JS xử lý mở menu
-                -->
-
+                <!--Nút account trên Navbar data-bs-toggle= "dropdown" là Bootstrap JS xử lý mở menu-->
                 <a
                 class="nav-link text-white dropdown-toggle"
                 href="#"
                 data-bs-toggle="dropdown">
-
-
                     <!-- Icon account -->
-
                     <i class="bi bi-person-circle fs-5"></i>
-
-
                     <!--
                         Hiển thị username lấy từ database
-
                         Ví dụ:
                         chantaro
-
                     -->
-
                     ${user.username}
-
-
                 </a>
 
 
