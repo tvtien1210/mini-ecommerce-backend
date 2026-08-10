@@ -31,6 +31,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // SỬA TẠI ĐÂY: Không dùng @Query, không dùng JOIN FETCH cho hàm exists
     boolean existsByEmail(String email);
+
+    boolean existsByUsername(String username);
 }
 
 

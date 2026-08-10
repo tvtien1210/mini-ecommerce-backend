@@ -4,6 +4,8 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.CreateReg
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.RegisterDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Role;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.RoleRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,13 +28,22 @@ public class AuthService {
 
     public RegisterDTO register(CreateRegisterRequest request) {
 
-        //check mail ton tai chua? neu chua nem exception
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exits"); //neu mail da ton tai, code se dung tai day nho throw new ex
+        //check username ton tai chua? neu chua nem exception
+        //errorCode tham so = ErrorCode.USERNAME_ALREADY_EXISTS la doi so
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BusinessException(ErrorCode.USERNAME_ALREADY_EXISTS);
         }
 
-        //neu mail chua toi tai tao moi user
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS); //neu mail da ton tai, code se dung tai day nho throw new ex
+        }
 
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new BusinessException(ErrorCode.PASSWORDS_DO_NOT_MATCH);
+        }
+
+        // Neu mail chua toi tai tao moi user
+        // Create User
         User user = new User();
 
         user.setUsername(request.getUsername());
@@ -45,7 +56,7 @@ public class AuthService {
 
         //ROLE
         Role role = roleRepository.findByName("ROLE_CUSTOMER")
-                .orElseThrow();
+                .orElseThrow(()-> new RuntimeException("ROLE_CUSTOMER not found"));
 
         user.addRole(role);
 

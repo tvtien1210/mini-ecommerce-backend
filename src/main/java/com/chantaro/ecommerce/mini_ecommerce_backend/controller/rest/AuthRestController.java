@@ -3,12 +3,17 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.login.LoginRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.CreateRegisterRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.RegisterDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.service.CustomUserDetailsService;
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtService;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,30 +45,28 @@ public class AuthRestController {
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody LoginRequest rq) {
 
-        //Buoc 1: Kiem tra username, password co dung khong?
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        rq.getUsername(),
-                        rq.getPassword()));
-        //Neu sai -> auto throw exception
+            //Buoc 1: Kiem tra username, password co dung khong?
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            rq.getUsername(),
+                            rq.getPassword()));
 
-        //Buoc 2: load user tu database
-        UserDetails user = customUserDetailsService.loadUserByUsername(rq.getUsername());
+            //Neu sai -> auto throw exception (BadCredentialsException)
 
-        //Buoc 3: tao token
+            //Buoc 2: load user tu database
+            UserDetails user = customUserDetailsService.loadUserByUsername(rq.getUsername());
 
-        return Map.of("accessToken", jwtService.generateAccessToken(user),
-                "refreshToken", jwtService.generateRefreshToken(user));
+            //Buoc 3: tao token
+            return Map.of("accessToken", jwtService.generateAccessToken(user),
+                    "refreshToken", jwtService.generateRefreshToken(user));
 
 
     }
 
     @PostMapping("/register")
-    public RegisterDTO register(@Valid @RequestBody CreateRegisterRequest request) {
-        return authService.register(request);
+    public ResponseEntity<?> register(@Valid @RequestBody CreateRegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
     }
-
-
 }
 
 /*security/

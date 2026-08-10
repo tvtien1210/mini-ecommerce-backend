@@ -124,7 +124,8 @@ public class User {
     }
 
 
-    public User() {}
+    public User() {
+    }
     // constructor rỗng (bắt buộc JPA)
 
 
@@ -137,16 +138,13 @@ public class User {
     }
 
 
+    //User này có Role này, và Role này cũng có User này.
     public void addRole(Role role) {
-
+        // Thêm role vào danh sách roles của User hiện tại
         this.roles.add(role);
-        // thêm role vào user
-
+        // lấy danh sách User của Role, thêm chính User hiện tại vào danh sách đó (giữ quan hệ 2 chiều)
         role.getUsers().add(this);
-        // thêm user vào role (giữ quan hệ 2 chiều)
-
-        // đảm bảo:
-        // User <-> Role luôn đồng bộ
+        // đảm bảo:  User <-> Role luôn đồng bộ
     }
 
 
