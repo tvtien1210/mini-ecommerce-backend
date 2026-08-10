@@ -1,4 +1,4 @@
-package com.chantaro.ecommerce.mini_ecommerce_backend.dto.response;
+package com.chantaro.ecommerce.mini_ecommerce_backend.exception.response;
 
 import lombok.Getter;
 import lombok.Setter;

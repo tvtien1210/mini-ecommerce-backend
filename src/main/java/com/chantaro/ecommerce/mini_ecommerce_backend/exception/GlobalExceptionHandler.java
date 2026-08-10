@@ -1,14 +1,16 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.exception;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.dto.response.ApiResponse;
+import com.chantaro.ecommerce.mini_ecommerce_backend.exception.response.ApiResponse;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -116,6 +118,19 @@ public class GlobalExceptionHandler {
                 );
     }
 
+
+    //BadCredentialsException Exception Handler
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<?>> handleBadCredentialsException(BadCredentialsException ex) {
+
+        //Vì đây là Exception bắt được từ Spring Security nên cần phải xử lý riêng
+        //Không giống Business Exception, được bắt qua OrElseThrow trực tiếp từ funtion
+
+        ErrorCode errorCode = ErrorCode.INVALID_USERNAME_PASSWORD; //giong voi ex.errorCode goi tu trong funtion qua orelsethrow
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode.getCode(), errorCode.getMessage()));
+    }
+
     // =====================================================
     // Common Exception Handler
     // 共通例外処理
@@ -158,3 +173,14 @@ public class GlobalExceptionHandler {
                 );
     }
 }
+
+/*ResponseEntity
+        |
+        |
+        HTTP response
+
+
+ApiResponse
+        |
+        |
+        Body JSON trả về*/

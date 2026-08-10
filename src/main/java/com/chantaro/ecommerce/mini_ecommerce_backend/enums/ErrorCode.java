@@ -169,6 +169,30 @@ public enum ErrorCode {
             "User not found",
             HttpStatus.NOT_FOUND
     ),
+
+
+    //Conflict: Phân tranh, xung đột
+    USERNAME_ALREADY_EXISTS(
+            7002,
+            "Username already exists",
+            HttpStatus.CONFLICT),
+
+    EMAIL_ALREADY_EXISTS(
+            7003,
+            "Email already exists",
+            HttpStatus.CONFLICT
+    ),
+
+    PASSWORDS_DO_NOT_MATCH(
+            7004,
+            "Passwords do not match",
+            HttpStatus.BAD_REQUEST
+    ),
+    INVALID_USERNAME_PASSWORD(
+            7005,
+            "Username or password incorrect",
+            HttpStatus.UNAUTHORIZED
+    ),
     UNAUTHORIZED(
             4010,
             "Unauthenticated",
@@ -243,7 +267,7 @@ public enum ErrorCode {
             10001,
             "Role not found",
             HttpStatus.NOT_FOUND
-    ),
+    )
     ;
 
     // Mã lỗi nội bộ
