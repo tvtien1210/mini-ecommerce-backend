@@ -1,6 +1,9 @@
 //Lấy form login thông qua id ="loginForm"
 //Khi người dùng bấm nút Login (submit form), thì chạy funtion phía dưới
 
+//const myForm = document.getElementById("loginForm");
+//console.log(myForm);
+
 document
 .getElementById("loginForm")
 .addEventListener("submit", async function(e){
@@ -18,7 +21,7 @@ document
     //Gửi request POST tới Spring Boot API login
     //Endpoint này xử lý authentication và tạo JWT token
     //await fetch dùng để gọi một yêu cầu mạng (như lấy dữ liệu từ một API) và
-    //Dừng lại chờ server phản hồi xong rồi mới lưu vào biến 'response'
+    // await : dừng lại chờ server phản hồi xong rồi mới lưu vào biến 'response'
     const response = await fetch("/api/auth/login",{
         //HTTP method sử dụng là POST
         //Vì @PostMapping("/login")
@@ -38,18 +41,18 @@ document
     })
 
 
+    const loginError = document.getElementById("loginError");
+    const loginErrorMessage = document.getElementById("loginErrorMessage");
     //Kiểm tra HTTP status code
     if(!response.ok){
-    //Hiển thị thông bào login thất bại
-    alert("Login failed");
-    //Dừng xử lý luôn
+    loginErrorMessage.innerText=`Error: Username or password incorrect`;
+    loginError.classList.remove("d-none");
     return;
     }
 
     //Đọc response từ Spring Boot
     //Server trả về JSON chứa JWT token
     const data = await response.json();
-    console.log("LOGIN RESPONSE:", data);
 
     //Lưu JWT token vào LocalStorage của trình duyệt
     localStorage.setItem("accessToken",data.accessToken);
@@ -60,3 +63,5 @@ document
     //Chuyển ngừoi dùng về trang Home
     window.location.href="/";
 });
+
+
