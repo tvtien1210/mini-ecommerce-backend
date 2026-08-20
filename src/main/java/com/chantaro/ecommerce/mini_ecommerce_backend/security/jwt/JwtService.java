@@ -1,15 +1,16 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 
 //JwtService = công cụ xử lý JWT
 @Service
@@ -37,7 +38,7 @@ public class JwtService {
 
                 // thêm thông tin roles vào token (custom field)
                 // ví dụ: ROLE_USER, ROLE_ADMIN
-                .claim("roles", user.getAuthorities().stream().map(auth -> auth.getAuthority()).toList())
+                .claim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
 
                 // set thời gian hết hạn (15 phút)
                 // nếu quá hạn → token không dùng được
@@ -50,6 +51,7 @@ public class JwtService {
                 // build thành chuỗi JWT hoàn chỉnh
                 .compact();
     }
+
 
 
     // TẠO REFRESH TOKEN (thời gian dài: 7 ngày)
@@ -75,12 +77,13 @@ public class JwtService {
     public String extractUsername(String token) {
 
         // parse token (giải mã + verify chữ ký)
-        return Jwts.parser()
+        return Jwts.parserBuilder()
 
                 // dùng SECRET để kiểm tra chữ ký
                 // nếu sai → throw exception
                 .setSigningKey(key)
 
+                .build()
                 // parse JWT (header + payload + signature)
                 .parseClaimsJws(token)
 
@@ -89,6 +92,16 @@ public class JwtService {
 
                 // lấy subject (username)
                 .getSubject();
+    }
+
+    //LẤY ROLE TỪ TOKEN
+    public List extractRoles(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("roles", List.class );
     }
 
     // Kiểm tra token có hợp lệ hay không
@@ -119,10 +132,12 @@ public class JwtService {
     // Method này parse JWT rồi lấy trường exp
     private Date extractExpiration(String token) {
 
-        return Jwts.parser()
+        return Jwts.parserBuilder()
 
                 // dùng secret key để verify chữ ký JWT
                 .setSigningKey(key)
+
+                .build()
 
                 // parse JWT
                 .parseClaimsJws(token)

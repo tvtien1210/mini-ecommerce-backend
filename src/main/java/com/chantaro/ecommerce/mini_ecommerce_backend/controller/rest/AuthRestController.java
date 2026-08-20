@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -43,22 +44,30 @@ public class AuthRestController {
 
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody LoginRequest rq) {
+    public Map<String, Object> login(@RequestBody LoginRequest rq) {
 
-            //Buoc 1: Kiem tra username, password co dung khong?
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            rq.getUsername(),
-                            rq.getPassword()));
+        //Buoc 1: Kiem tra username, password co dung khong?
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        rq.getUsername(),
+                        rq.getPassword()));
 
-            //Neu sai -> auto throw exception (BadCredentialsException)
+        //Neu sai -> auto throw exception (BadCredentialsException)
 
-            //Buoc 2: load user tu database
-            UserDetails user = customUserDetailsService.loadUserByUsername(rq.getUsername());
+        //Buoc 2: load user tu database
+        UserDetails user = customUserDetailsService.loadUserByUsername(rq.getUsername());
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+        String username = jwtService.extractUsername(accessToken);
+        List<String> roles = jwtService.extractRoles(accessToken);
 
-            //Buoc 3: tao token
-            return Map.of("accessToken", jwtService.generateAccessToken(user),
-                    "refreshToken", jwtService.generateRefreshToken(user));
+
+        //Buoc 3: tao token
+        return Map.of("accessToken", accessToken,
+                "refreshToken", refreshToken,
+                "username", username,
+                "roles",roles
+        );
 
 
     }

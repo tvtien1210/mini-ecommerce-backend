@@ -172,6 +172,8 @@ public class OrderService {
             if (pendingPayment.getExpiredAt().isBefore(LocalDateTime.now())) {
                 //Thay đổi status Payment sang FAILED hết hạn, lỗi không thể dùng link VNPay đã tạo để thanh toán nữa
                 pendingPayment.setStatus(PaymentStatusCode.FAILED);
+                //Cập nhật vào database
+                paymentRepository.save(pendingPayment);
 
                 //Tạo link VNpay mới với dữ liệu cũ
                 PaymentDTO paymentDTO = paymentServiceImpl.createPaymentUrl(pendingOrder.getId(), request);

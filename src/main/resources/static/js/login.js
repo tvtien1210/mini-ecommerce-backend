@@ -64,4 +64,4 @@ document
     window.location.href="/";
 });
 
-
+//Login -> accessToken -> localStorage -> decodeJWT -> user,role -> navbar USER, ADMIN

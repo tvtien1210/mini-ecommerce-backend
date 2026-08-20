@@ -1,6 +1,7 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.security.config;
 
 // ===== Import JWT =====
+
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtFilter;
 
 // ===== Import Spring =====
@@ -109,144 +110,211 @@ public class SecurityConfig {
                 // ===== PHÂN QUYỀN =====
                 .authorizeHttpRequests(auth -> auth
 
+                        // =========================================================
+                        // PUBLIC PAGES
+                        // =========================================================
 
-                        // ===== PUBLIC =====
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/register/**").permitAll()
-
-                        // API login/register → không cần token
-                        .requestMatchers("/api/auth/**").permitAll()
-
-
-                        // ===== USER API =====
-
-                        //Endpoint cụ thể đặt trước endpoint rộng, User đã login là xem được
-                        //SecurityConfig cho phép JWT đi qua, api này phải yêu cầu login
-                        .requestMatchers("api/users/me").authenticated()
-
-
-                        // CUSTOMER, STAFF, ADMIN đều được xem user API
-                        .requestMatchers("/api/users/**")
-                        .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
-
-
-
-
-
-                        // ===== PRODUCT API =====
-
-                        // Ai cũng có thể xem sản phẩm GET
                         .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/products/**"
-                        )
-                        .hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
+                                "/",
+                                "/login",
+                                "/register/**"
+                        ).permitAll()
 
 
-                        // ADMIN tạo sản phẩm POST
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/products/**"
-                        )
-                        .hasRole("ADMIN")
+                        // =========================================================
+                        // PUBLIC API - AUTHENTICATION
+                        // =========================================================
 
-
-                        // ADMIN sửa sản phẩm PUT
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/api/products/**"
-                        )
-                        .hasRole("ADMIN")
-
-
-                        // ADMIN xóa sản phẩm DELETE
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/api/products/**"
-                        )
-                        .hasRole("ADMIN")
-
-
-                        // ===== ADMIN PAGE =====
-                        .requestMatchers("/admin/**")
-                        .hasRole("ADMIN")
-
-
-                        // ===== STAFF PAGE =====
-                        .requestMatchers("/staff/**")
-                        .hasAnyRole("STAFF", "ADMIN")
-
-
-                        // ===== ORDER API =====
-
-                        // Customer checkout
-                        // Cart -> Order
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/orders/checkout"
-                        )
-                        .hasRole("CUSTOMER")
-
-
-                        // Customer xem order của mình
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/orders/my"
-                        )
-                        .hasRole("CUSTOMER")
-
-
-                        // Staff/Admin cập nhật trạng thái order
-                        // Ví dụ:
-                        // PUT /api/orders/1/status
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/api/orders/*/status"
-                        )
-                        .hasAnyRole("STAFF", "ADMIN")
-
-
-                        // Staff/Admin xem tất cả order
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/orders/**"
-                        )
-                        .hasAnyRole("STAFF", "ADMIN")
-
-
-                        // ===== CART API =====
-
-                        // Chỉ customer được:
-                        // add cart
-                        // update quantity
-                        // remove item
-                        .requestMatchers("/api/cart/**")
-                        .hasRole("CUSTOMER")
-
-                        // VNPay callback
-                        .requestMatchers(
-                                "/api/payment/return",
-                                "/api/payment/ipn"
-                        )
+                        // Login / Register / Authentication
+                        .requestMatchers("/api/auth/**")
                         .permitAll()
 
 
-                        // ===== PUBLIC RESOURCES =====
+                        // =========================================================
+                        // PUBLIC RESOURCES
+                        // =========================================================
+
+                        // Static resources
                         .requestMatchers(
                                 "/images/**",
                                 "/css/**",
                                 "/js/**",
                                 "/favicon.ico"
+                        ).permitAll()
+
+
+                        // =========================================================
+                        // USER API
+                        // =========================================================
+
+                        // Current authenticated user
+                        // GET /api/users/me
+                        .requestMatchers("/api/users/me")
+                        .authenticated()
+
+
+                        // User management API
+                        // CUSTOMER / STAFF / ADMIN
+                        .requestMatchers("/api/users/**")
+                        .hasAnyRole(
+                                "CUSTOMER",
+                                "STAFF",
+                                "ADMIN"
                         )
+
+
+                        // =========================================================
+                        // PRODUCT API
+                        // =========================================================
+
+                        // View products
+                        // CUSTOMER / STAFF / ADMIN
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/products/**"
+                        ).hasAnyRole(
+                                "CUSTOMER",
+                                "STAFF",
+                                "ADMIN"
+                        )
+
+
+                        // Create product
+                        // ADMIN only
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/products/**"
+                        ).hasRole("ADMIN")
+
+
+                        // Update product
+                        // ADMIN only
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/products/**"
+                        ).hasRole("ADMIN")
+
+
+                        // Delete product
+                        // ADMIN only
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/products/**"
+                        ).hasRole("ADMIN")
+
+
+                        // =========================================================
+                        // CUSTOMER - CART
+                        // =========================================================
+
+                        // Customer cart
+                        // Add / Update / Remove / View cart
+                        .requestMatchers("/api/cart/**")
+                        .hasRole("CUSTOMER")
+
+
+                        // =========================================================
+                        // CUSTOMER - ORDER
+                        // =========================================================
+
+                        // My Orders page
+                        // Customer only
+                        .requestMatchers("/myorders")
                         .permitAll()
 
 
-                        // ===== CÒN LẠI =====
+                        // Checkout
+                        // Cart -> Create Order
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/orders/checkout"
+                        ).hasRole("CUSTOMER")
+
+
+                        // Get current customer's orders
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/orders/my"
+                        ).hasRole("CUSTOMER")
+
+
+                        // =========================================================
+                        // STAFF / ADMIN - ORDER MANAGEMENT
+                        // =========================================================
+
+                        // Update order status
+                        // STAFF / ADMIN
+                        // PUT /api/orders/{id}/status
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/orders/*/status"
+                        ).hasAnyRole(
+                                "STAFF",
+                                "ADMIN"
+                        )
+
+
+                        // View all orders
+                        // STAFF / ADMIN
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/orders/**"
+                        ).hasAnyRole(
+                                "STAFF",
+                                "ADMIN"
+                        )
+
+
+                        // =========================================================
+                        // STAFF PAGES
+                        // =========================================================
+
+                        .requestMatchers("/staff/**")
+                        .hasAnyRole(
+                                "STAFF",
+                                "ADMIN"
+                        )
+
+
+                        // =========================================================
+                        // ADMIN PAGES
+                        // =========================================================
+
+                        // Admin Dashboard
+                        .requestMatchers("/admin")
+                        .permitAll()
+
+
+                        // Admin Management Pages
+                        // /admin/products
+                        // /admin/orders
+                        // /admin/users
+                        .requestMatchers("/admin/**")
+                        .hasRole("ADMIN")
+
+
+                        // =========================================================
+                        // VNPAY
+                        // =========================================================
+
+                        // VNPay return / IPN callback
+                        // VNPay server must be able to access these endpoints
+                        .requestMatchers(
+                                "/api/payment/return",
+                                "/api/payment/ipn"
+                        ).permitAll()
+
+
+                        // =========================================================
+                        // EVERYTHING ELSE
+                        // =========================================================
+
+                        .requestMatchers("/403").permitAll()
+
+                        // All remaining endpoints require authentication
                         .anyRequest()
                         .authenticated()
                 )
-
 
                 // ===== JWT FILTER =====
                 // Request đi qua JWT trước

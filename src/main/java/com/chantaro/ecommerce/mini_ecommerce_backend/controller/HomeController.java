@@ -24,4 +24,9 @@ public class HomeController {
     public String register() {
         return "register";
     }
+
+    @GetMapping("/myorders")
+    public String myorders() {
+        return "myorders";
+    }
 }
