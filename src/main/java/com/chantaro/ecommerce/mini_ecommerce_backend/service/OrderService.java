@@ -15,8 +15,6 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.util.VNPayUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,15 +34,15 @@ import java.util.Set;
 public class OrderService {
 
     // Repository層
+    private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
+
+
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
-    private final ProductRepository productRepository;
-    private final StockService stockService;
     private final StockRetryService stockRetryService;
-    private final PaymentRepository paymentRepository;
-    private final PaymentServiceImpl paymentServiceImpl;
     private final VNPayUtil vnPayUtil;
 
 
@@ -165,7 +163,7 @@ public class OrderService {
                 paymentRepository.save(pendingPayment);
 
                 //Tạo link VNpay mới với dữ liệu cũ
-                PaymentDTO paymentDTO = paymentServiceImpl.createPaymentUrl(pendingOrder.getId(), request);
+                PaymentDTO paymentDTO = paymentService.createPaymentUrl(pendingOrder.getId(), request);
                 return CheckoutMapper.toDTO(pendingOrder, paymentDTO);
             }
         }
@@ -257,7 +255,7 @@ public class OrderService {
 
 
         //Tạo Payment - Status Pending
-        PaymentDTO paymentDTO = paymentServiceImpl.createPaymentUrl(saveOrder.getId(), request);
+        PaymentDTO paymentDTO = paymentService.createPaymentUrl(saveOrder.getId(), request);
 
 
         // ===============================

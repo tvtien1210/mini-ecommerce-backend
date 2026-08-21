@@ -27,12 +27,13 @@ import java.util.Map;
 // コンストラクタを手動作成せずにDIを行う
 public class PaymentServiceImpl implements PaymentService {
 
-    private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
-    private final OrderService orderService;
-    private final CartService cartService;
+    private final OrderRepository orderRepository;
+
     private final StockService stockService;
     private final StockRetryService stockRetryService;
+
+    private final CartService cartService;
     private final VNPayUtil vnPayUtil;
 
     // 1. CREATE PAYMENT
