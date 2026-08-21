@@ -103,18 +103,6 @@ public class Order {
 
 
     // ================== BUSINESS LOGIC ==================
-    // Method này dùng để tính tổng tiền từ danh sách OrderItem
-    // Không nên set totalPrice thủ công từ bên ngoài (tránh sai dữ liệu)
-
-    public void calculateTotalPrice() {
-        BigDecimal total = BigDecimal.ZERO;
-        for (OrderItem orderItem : this.orderItems) {
-            BigDecimal itemTotal = orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
-            // total.add(itemTotal)-> nhớ gán total = ... Vì BigDecimal là immutable (bất biến), không thể gán trực tiếp, mà cần add(), -> tạo ra object total mới;
-            total = total.add(itemTotal);
-        }
-        this.totalPrice = total;
-    }
 
     public void addItem(OrderItem orderItem) {
 
@@ -137,6 +125,22 @@ public class Order {
 
         calculateTotalPrice();
     }
+
+    // Method này dùng để tính tổng tiền từ danh sách OrderItem
+    // Không nên set totalPrice thủ công từ bên ngoài (tránh sai dữ liệu)
+
+    public void calculateTotalPrice() {
+        BigDecimal total = BigDecimal.ZERO;
+        for (OrderItem orderItem : this.orderItems) {
+            BigDecimal itemTotal = orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+            // total.add(itemTotal)-> nhớ gán total = ...
+            // Vì BigDecimal là immutable (bất biến), không thể gán trực tiếp,
+            // mà cần add(), -> tạo ra object total mới;
+            total = total.add(itemTotal);
+        }
+        this.totalPrice = total;
+    }
+
 
     //item.setOrder(null) = “cắt quan hệ ở DB”
     //nếu không set null order_id vẫn còn -> dữ liệu sai lệch (inconsistent)

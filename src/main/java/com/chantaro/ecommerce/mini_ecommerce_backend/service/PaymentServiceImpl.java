@@ -22,14 +22,17 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor //Không phải tạo Constructor (DI) thủ công
+@RequiredArgsConstructor
+//Không phải tạo Constructor (DI) thủ công
 // コンストラクタを手動作成せずにDIを行う
 public class PaymentServiceImpl implements PaymentService {
 
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final OrderService orderService;
     private final CartService cartService;
     private final StockService stockService;
+    private final StockRetryService stockRetryService;
     private final VNPayUtil vnPayUtil;
 
     // 1. CREATE PAYMENT
@@ -89,8 +92,7 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = payment.getOrder();
 
         // 2. idempotent, nếu payment này đã xử lý SUCCESS rồi thì thôi, dừng method tại đây
-        // 2. 冪等性保証:
-        // 既にSUCCESS処理済みなら何もしない
+        // 2. 冪等性保証: 既にSUCCESS処理済みなら何もしない
         if (payment.getStatus() == PaymentStatusCode.SUCCESS) {
 
             // thoát khỏi method NGAY LẬP TỨC
@@ -132,9 +134,9 @@ public class PaymentServiceImpl implements PaymentService {
             order.setStatus(OrderStatusCode.PAID);
             order.getCart().setStatus(CartStatusCode.CHECKED_OUT);
 
-            // trừ stock thật
-            // 実在庫を減算
-            stockService.confirmReservedStock(order);
+            // Trừ stock thật với cơ chế retry khi Optimistic Lock
+            // 楽観ロック失敗時、リトライしながら実在庫を減算
+            stockRetryService.processStockWithRetry(order);
 
             //Xoá đúng item đã checkout
             //チェックアウトされたcartItemを削除

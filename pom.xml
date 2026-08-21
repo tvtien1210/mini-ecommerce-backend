@@ -5,8 +5,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.11</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>3.5.14</version> <!-- Hoặc 4.0.6 -->
+		<relativePath/>
 	</parent>
 	<groupId>com.chantaro.ecommerce</groupId>
 	<artifactId>mini-ecommerce-backend</artifactId>
@@ -130,7 +130,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Unit test -->
+		<!-- Unit Test Dependency -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

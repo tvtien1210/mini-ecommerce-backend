@@ -1,123 +1,168 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.OrderItem;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
-import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StockService {
 
-    private final ProductRepository productRepository;
 
-    public StockService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
-
-    //Xử lý trừ tồn kho cho toàn bộ cart
-    // カート全体の在庫減算処理
-
-    //Xử lý trừ tồn kho với cơ chế retry khi xảy ra optimistic locking ở method liên quan
-    // 関連メソッドで Optimistic Locking が発生した場合に retry 可能な在庫減算処理
-
-    //Chạy trong 1 transaction (atomic: tất cả thành công hoặc rollback hết)
-    // 1つの Transaction 内で実行（atomic: 全成功または全 rollback）
-
-
+    // RESERVE STOCK
+    // Giữ trước hàng khi khách checkout.
+    // stock không giảm ngay.
+    // reservedStock tăng lên.
     @Transactional
-// トランザクション制御
     public void reserveStock(Order order) {
 
         // Duyệt toàn bộ sản phẩm trong Order
-        // 注文商品のループ
         for (OrderItem orderItem : order.getOrderItems()) {
 
-            // Lấy Product hiện tại từ Persistence Context
-            // (đã được Hibernate quản lý)
-            // Managed状態の商品取得
+            // Lấy Product từ OrderItem
             Product product = orderItem.getProduct();
 
             // Số lượng còn có thể bán
-            // = Tồn kho thực tế - Hàng đang được giữ
-            // 販売可能在庫数を計算
             int available =
-                    product.getStock() - product.getReservedStock();
+                    product.getStock()
+                            - product.getReservedStock();
 
-            // Số lượng khách đặt mua
-            // 注文数量取得
-            int quantity = orderItem.getQuantity();
+            // Số lượng khách muốn mua
+            int quantity =
+                    orderItem.getQuantity();
 
-            // Không chấp nhận số lượng <= 0
-            // 数量不正チェック
+
+            // Không chấp nhận quantity <= 0
             if (quantity <= 0) {
-                throw new BusinessException(ErrorCode.INVALID_QUANTITY);
+
+                throw new BusinessException(
+                        ErrorCode.INVALID_QUANTITY
+                );
             }
 
-            // Kiểm tra tồn kho có đủ để giữ hàng không
-            // 在庫不足チェック
+
+            // Kiểm tra tồn kho
             if (available < quantity) {
-                throw new BusinessException(ErrorCode.OUT_OF_STOCK);
+
+                throw new BusinessException(
+                        ErrorCode.OUT_OF_STOCK
+                );
             }
 
-            // Giữ trước số lượng hàng cho đơn hàng này
-            // Ví dụ:
-            // stock = 10
-            // reservedStock = 3
-            // quantity = 2
-            //
-            // Sau khi reserve:
-            // stock = 10
-            // reservedStock = 5
-            // available = 5
-            //
-            // 注文分の在庫を一時確保
+
+            // Giữ trước số lượng hàng
             product.setReservedStock(
                     product.getReservedStock() + quantity
             );
-
-            // Không cần gọi save()
-            // save()不要
-
-            // Product đang ở trạng thái Managed
-            // Managedエンティティ
-
-            // Hibernate sẽ tự sinh câu lệnh UPDATE
-            // khi Transaction được commit
-            // Commit時に自動UPDATE
         }
     }
 
+    // RESERVE STOCK WITH RETRY
+    // 楽観ロック失敗時のリトライ処理
+    @Transactional
+    public void reserveStockWithRetry(Order order) {
+
+        int maxRetry = 3;
+        int attempt = 0;
+
+        while (attempt < maxRetry) {
+
+            try {
+
+                // Thực hiện giữ stock
+                // 在庫確保
+                reserveStock(order);
+
+                // Thành công → kết thúc
+                return;
+
+            } catch (ObjectOptimisticLockingFailureException e) {
+
+                // Optimistic Lock thất bại
+                // 楽観ロック失敗
+                attempt++;
+
+                // Đã retry đủ số lần
+                if (attempt >= maxRetry) {
+
+                    throw new BusinessException(
+                            ErrorCode.SYSTEM_BUSY
+                    );
+                }
+
+                try {
+
+                    // Chờ 100ms trước khi retry
+                    Thread.sleep(100);
+
+                } catch (InterruptedException ex) {
+
+                    // Giữ lại trạng thái interrupt của thread
+                    Thread.currentThread().interrupt();
+
+                    throw new BusinessException(
+                            ErrorCode.SYSTEM_BUSY
+                    );
+                }
+            }
+        }
+    }
+
+
+    // CONFIRM RESERVED STOCK
+    // Khách thanh toán thành công.
+    // stock giảm.
+    // reservedStock giảm.
     @Transactional
     public void confirmReservedStock(Order order) {
 
         for (OrderItem item : order.getOrderItems()) {
 
-            Product product = item.getProduct();
+            Product product =
+                    item.getProduct();
 
+            int quantity =
+                    item.getQuantity();
+
+
+            // Trừ tồn kho thật
             product.setStock(
-                    product.getStock() - item.getQuantity()
+                    product.getStock() - quantity
             );
 
+
+            // Bỏ trạng thái giữ hàng
             product.setReservedStock(
-                    product.getReservedStock() - item.getQuantity()
+                    product.getReservedStock() - quantity
             );
         }
     }
 
+
+    // RELEASE RESERVED STOCK
+    // Khách không thanh toán hoặc payment hết hạn.
+    // Không trừ stock thật.
+    // Chỉ trả lại reservedStock.
     @Transactional
     public void releaseReservedStock(Order order) {
 
         for (OrderItem item : order.getOrderItems()) {
 
-            Product product = item.getProduct();
+            Product product =
+                    item.getProduct();
 
+            int quantity =
+                    item.getQuantity();
+
+
+            // Giải phóng số hàng đã reserve
             product.setReservedStock(
-                    product.getReservedStock() - item.getQuantity()
+                    product.getReservedStock() - quantity
             );
         }
     }
-
-
 }

@@ -13,6 +13,7 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.PaymentMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.util.VNPayUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -31,6 +32,7 @@ import java.util.Set;
 // ログ出力用アノテーション
 @Service
 // 注文関連サービス
+@RequiredArgsConstructor
 public class OrderService {
 
     // Repository層
@@ -40,24 +42,11 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final StockService stockService;
+    private final StockRetryService stockRetryService;
     private final PaymentRepository paymentRepository;
     private final PaymentServiceImpl paymentServiceImpl;
-
     private final VNPayUtil vnPayUtil;
 
-
-    @Autowired
-    public OrderService(CartRepository cartRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, StockService stockService, PaymentRepository paymentRepository, PaymentServiceImpl paymentServiceImpl, VNPayUtil vnPayUtil) {
-        this.cartRepository = cartRepository;
-        this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.userRepository = userRepository;
-        this.productRepository = productRepository;
-        this.stockService = stockService;
-        this.paymentRepository = paymentRepository;
-        this.paymentServiceImpl = paymentServiceImpl;
-        this.vnPayUtil = vnPayUtil;
-    }
 
 
     public List<OrderDTO> getAllOrders() {
@@ -257,15 +246,14 @@ public class OrderService {
             order.addItem(orderItem);
         }
 
+        //Trong processStockWithRetry đã có xử lý reserverStock
+        stockRetryService.reserveStockWithRetry(order);
+
         // ===============================
         // 7. Save order vào db
         // ===============================
         // 注文保存
         Order saveOrder = orderRepository.save(order);
-
-
-        //Trong processStockWithRetry đã có xử lý reserverStock
-        processStockWithRetry(order);
 
 
         //Tạo Payment - Status Pending
@@ -479,79 +467,7 @@ public class OrderService {
     }
 
 
-    //Xử lý trừ tồn kho với cơ chế retry khi xảy ra optimistic locking
-    // 楽観ロック失敗時リトライ処理
-    public void processStockWithRetry(Order order) {
 
-        int maxRetry = 3;   // Số lần retry tối đa
-        // 最大リトライ回数
-
-        int attempt = 0;    // Số lần đã thử
-        // 現在試行回数
-
-        // Loop retry
-        // リトライループ
-        while (attempt < maxRetry) {
-            try {
-
-                // Gọi logic chính xử lý stock
-                // 在庫処理実行
-
-                // (có thể throw exception)
-                // 例外発生可能
-                stockService.reserveStock(order);
-
-                return; // Nếu thành công thì thoát luôn
-                // 成功時終了
-
-            } catch (ObjectOptimisticLockingFailureException e) {
-
-                // Exception này xảy ra khi:
-                // 楽観ロック例外
-
-                // Có 2 transaction cùng update 1 record
-                // 同時更新競合
-
-                // -> version bị lệch
-                // version不一致
-
-                attempt++; // Tăng số lần thử
-                // リトライ回数加算
-
-                // Nếu đã retry quá số lần cho phép
-                // 最大回数超過
-                if (attempt >= maxRetry) {
-
-                    // Ném lỗi ra ngoài
-                    // 業務例外送出
-                    throw new BusinessException(ErrorCode.SYSTEM_BUSY);
-                }
-
-                try {
-
-                    // ⏳ Delay 1 chút trước khi retry
-                    // リトライ前待機
-
-                    // Tránh retry liên tục gây xung đột tiếp
-                    // 競合緩和
-                    Thread.sleep(100);
-
-                } catch (InterruptedException ex) {
-
-                    // Nếu thread bị interrupt
-                    // Thread割り込み検知
-
-                    //interrupt = ngắt / làm gián đoạn thread
-                    // スレッド中断
-
-                    Thread.currentThread().interrupt();
-
-                    //OK, tao bị interrupt
-                    // 割り込み状態保持
-                }
-            }
-        }
-    }
 
 
     public void paidOrder(Long orderId) {
