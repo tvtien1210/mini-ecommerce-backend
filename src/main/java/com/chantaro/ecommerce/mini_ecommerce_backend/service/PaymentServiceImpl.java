@@ -1,6 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment.PaymentDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;

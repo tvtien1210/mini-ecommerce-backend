@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+
+    <title>Products - Chantaro Store</title>
+
+
+    <!-- ==============================
+         BOOTSTRAP
+    ================================== -->
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+
+
+    <!-- ==============================
+         CUSTOM CSS
+    ================================== -->
+
+    <link
+            rel="stylesheet"
+            href="/css/style.css">
+
+
+    <!-- ==============================
+         BOOTSTRAP ICONS
+    ================================== -->
+
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <style>
+
+    .pagination .page-link {
+        background-color: #212529;
+        border-color: #495057;
+        color: white;
+    }
+
+    .pagination .page-link:hover {
+        background-color: #343a40;
+        border-color: #198754;
+        color: white;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #198754;
+        border-color: #198754;
+        color: white;
+    }
+
+    .navbar .navbar-nav .nav-link:hover,
+    .navbar .navbar-nav .nav-link.active {
+        color: #198754 !important;
+    }
+
+
+    </style>
+
+
+
+
+</head>
+
+
+<body>
+
+
+<!-- ==============================
+     NAVBAR
+================================== -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-black">
+
+    <div class="container d-flex align-items-center">
+
+
+        <!-- Logo -->
+
+        <a class="navbar-brand fw-bold fs-4"
+           th:href="@{/}">
+
+            <i class="bi bi-laptop-fill"></i>
+
+        </a>
+
+
+        <!-- Right side -->
+
+        <div
+                class="d-flex
+                       align-items-center
+                       gap-3
+                       ms-auto
+                       order-lg-2">
+
+
+            <!-- Account -->
+
+            <div id="userInfo">
+
+                <a
+                        class="nav-link text-white"
+                        th:href="@{/login}">
+
+                    <i class="bi bi-person-circle"></i>
+
+                </a>
+
+            </div>
+
+
+            <!-- Admin -->
+
+            <div
+                    id="adminMenu"
+                    class="d-none">
+
+                <a
+                        class="nav-link text-white"
+                        href="#">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                </a>
+
+            </div>
+
+
+            <!-- Cart -->
+
+            <a
+                    id="cartMenu"
+                    class="nav-link text-white"
+                    th:href="@{/cart}">
+
+                <i class="bi bi-cart3"></i>
+
+            </a>
+
+
+            <!-- Mobile menu -->
+
+            <button
+                    class="navbar-toggler border-0"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#nav"
+                    aria-controls="nav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+
+                <span class="navbar-toggler-icon"></span>
+
+            </button>
+
+
+        </div>
+
+
+        <!-- Navigation -->
+
+        <div
+                class="collapse
+                       navbar-collapse
+                       justify-content-center
+                       order-lg-1"
+                id="nav">
+
+
+            <ul class="navbar-nav">
+
+
+                <!-- Home -->
+
+                <li class="nav-item text-center">
+
+                    <a
+                            class="nav-link text-light"
+                            th:href="@{/}">
+
+                        Home
+
+                    </a>
+
+                </li>
+
+
+                <!-- Products -->
+
+                <li class="nav-item text-center">
+
+                    <a
+                            class="nav-link"
+                            th:classappend="${activePage == 'products' ? 'active' : 'text-light'}"
+                            th:href="@{/products}">
+
+                        Products
+
+                    </a>
+
+                </li>
+
+
+                <!-- Category -->
+
+                <li class="nav-item text-center">
+
+                    <a
+                            class="nav-link text-light"
+                            href="#">
+
+                        Category
+
+                    </a>
+
+                </li>
+
+
+            </ul>
+
+
+        </div>
+
+
+    </div>
+
+</nav>
+
+
+<!-- ==============================
+     PAGE HEADER
+================================== -->
+
+<section class="products-header py-5">
+
+    <div class="container text-center">
+
+
+        <h1 class="mb-3">
+
+            Our Products
+
+        </h1>
+
+
+        <p class="text-secondary mb-0">
+
+            Discover premium Apple products at Chantaro Store
+
+        </p>
+
+
+    </div>
+
+</section>
+
+
+<!-- ==============================
+     PRODUCTS
+================================== -->
+
+<section class="products-section container pb-5">
+
+
+    <!-- ==============================
+         SEARCH + SORT
+    ================================== -->
+
+    <div class="row g-3 mb-4">
+
+
+        <!-- Search -->
+
+        <div class="col-12 col-lg-8">
+
+            <div class="input-group">
+
+
+                <span class="input-group-text bg-dark border-secondary text-secondary">
+
+                    <i class="bi bi-search"></i>
+
+                </span>
+
+
+                <input
+                        type="text"
+                        class="form-control bg-dark text-light border-secondary"
+                        placeholder="Search products...">
+
+
+                <button
+                        class="btn btn-primary"
+                        type="button">
+
+                    Search
+
+                </button>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- Sort -->
+
+        <div class="col-12 col-lg-4">
+
+            <select
+                    class="form-select bg-dark text-light border-secondary">
+
+                <option value="">
+
+                    Sort by: Latest
+
+                </option>
+
+
+                <option value="price-asc">
+
+                    Price: Low to High
+
+                </option>
+
+
+                <option value="price-desc">
+
+                    Price: High to Low
+
+                </option>
+
+
+                <option value="name">
+
+                    Name: A-Z
+
+                </option>
+
+
+            </select>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- ==============================
+         CATEGORY FILTER
+    ================================== -->
+
+    <div class="d-flex flex-wrap gap-2 mb-5">
+
+
+        <button
+                class="btn btn-primary">
+
+            All
+
+        </button>
+
+
+        <button
+                class="btn btn-outline-light">
+
+            iPhone
+
+        </button>
+
+
+        <button
+                class="btn btn-outline-light">
+
+            MacBook
+
+        </button>
+
+
+        <button
+                class="btn btn-outline-light">
+
+            iPad
+
+        </button>
+
+
+        <button
+                class="btn btn-outline-light">
+
+            Apple Watch
+
+        </button>
+
+
+        <button
+                class="btn btn-outline-light">
+
+            Accessories
+
+        </button>
+
+
+    </div>
+
+
+    <!-- ==============================
+         PRODUCT RESULT
+    ================================== -->
+
+    <div
+            class="d-flex
+                   justify-content-between
+                   align-items-center
+                   mb-4">
+
+
+        <h2 class="h4 mb-0">
+
+            All Products
+
+        </h2>
+
+
+        <span class="text-secondary"
+              th:text="${totalProducts + ' Products'}">
+
+            12 Products
+
+        </span>
+
+
+    </div>
+
+
+    <!-- =====================================================
+      PRODUCT GRID
+     ====================================================== -->
+
+    <div class="row g-4">
+
+        <div class="col-12 col-sm-6 col-lg-4"
+             th:each="product : ${products}">
+
+            <!-- PRODUCT CARD -->
+
+            <div class="card
+                    product-card
+                    text-center
+                    p-4
+                    h-100
+                    d-flex
+                    flex-column"
+                 th:data-product-id="${product.id}">
+
+
+                <!-- =========================================
+                     PRODUCT IMAGE
+                ========================================== -->
+
+                <div class="product-image mb-3">
+
+                    <img
+                            th:src="${product.imageUrl}"
+                            class="img-fluid"
+                            th:alt="${product.name}">
+
+                </div>
+
+
+                <!-- =========================================
+                     PRODUCT INFORMATION
+                ========================================== -->
+
+                <div class="product-info
+                        d-flex
+                        flex-column
+                        flex-grow-1">
+
+
+                    <!-- PRODUCT NAME -->
+
+                    <h5 class="product-title text-light"
+                        th:text="${product.name}">
+
+                        iPhone 15 Pro
+
+                    </h5>
+
+
+                    <!-- PRODUCT DESCRIPTION -->
+
+                    <p class="product-description text-secondary"
+                       th:text="${product.description}">
+
+                        Powerful performance with a premium
+                        titanium design.
+
+                    </p>
+
+
+                    <!-- PRODUCT PRICE -->
+
+                    <p class="product-price
+                          text-primary
+                          fw-bold"
+                       th:text="${product.price}">
+
+                        22.990.000 VND
+
+                    </p>
+
+
+                    <!-- PRODUCT STOCK -->
+
+                    <p class="text-secondary small">
+
+                        Stock:
+
+                        <span class="text-light"
+                              th:text="${product.stock}">
+
+                        10
+
+                    </span>
+
+                    </p>
+
+
+                    <!-- =====================================
+                         ADD TO CART
+                         mt-auto = push button to bottom
+                    ====================================== -->
+
+                    <button
+                            type="button"
+                            class="btn btn-primary
+                               w-100
+                               mt-auto">
+
+                        <i class="bi bi-cart-plus me-2"></i>
+
+                        Add to Cart
+
+                    </button>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ==============================
+         PAGINATION
+    ================================== -->
+
+    <!--    Pagination : chi hien thi khi co nhieu hon mot trang-->
+    <nav
+            th:if="${totalPages > 1}"
+            aria-label="Product pagination"
+            class="mt-5">
+
+
+        <ul class="pagination justify-content-center">
+
+
+            <!-- PREVIOUS-->
+
+            <!-- Quay ve trang truoc-->
+            <!-- append : cot vao, buoc vao , noi vao-->
+            <!-- th:classappend : nghia la neu dang o trang dau tien thi them class disabled vao <li>-->
+            <li class="page-item"
+                th:classappend="${currentPage == 0} ? 'disabled'">
+
+                <a
+                        class="page-link"
+                        th:href="@{/products(page=${currentPage - 1})}">
+
+                    <i class="bi bi-chevron-left"></i>
+
+                </a>
+
+            </li>
+
+
+            <!--  PAGE NUMBER-->
+
+            <!--  Tao cac nut 1,2,3...-->
+            <!--  sequence(0,totalPages-1)  : chuỗi -->
+            <!--  Tao danh sach: 0,1,2, ..., totalPages-1-->
+            <!--  VD: totalPages = 3 -> 0,1,2-->
+
+            <li class="page-item"
+                th:each="pageNumber : ${#numbers.sequence(0,totalPages - 1)}"
+                th:classappend="${pageNumber == currentPage} ? 'active'"
+            >
+
+                <a
+                        class="page-link"
+                        th:href="@{/products(page=${pageNumber})}"
+                        th:text="${pageNumber + 1}">
+                </a>
+
+            </li>
+
+
+            <!-- NEXT-->
+
+            <li class="page-item"
+                th:classappend="${currentPage == totalPages -1} ? 'disabled'">
+
+                <a
+                        class="page-link"
+                        th:href="@{/products(page = ${currentPage + 1})}">
+
+                    <i class="bi bi-chevron-right"></i>
+
+                </a>
+
+            </li>
+
+
+        </ul>
+
+
+    </nav>
+
+
+</section>
+
+
+<!-- ==============================
+     FOOTER
+================================== -->
+
+<footer class="text-center py-4">
+
+    <p class="mb-0">
+
+        © 2026 Chantaro Store
+
+    </p>
+
+</footer>
+
+
+<!-- ==============================
+     BOOTSTRAP JS
+================================== -->
+
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<!-- ==============================
+     NAVBAR JS
+================================== -->
+
+<script
+        type="module"
+        src="/js/navbar.js">
+</script>
+
+
+</body>
+
+</html>

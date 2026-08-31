@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -49,7 +50,7 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 3, nullable = false)
-    private CurrencyCode currency = CurrencyCode.VND;
+    private CurrencyCode currency;
 
     @NotNull
     @Min(0)
@@ -68,6 +69,12 @@ public class Product {
     // khoá số lượng tồn kho sau khi trừ, sau khi có user load mua hàng trước, ai nhanh người ấy được
     @Version
     private Long version;
+
+    //Cho phep null, nullable = true
+    //Khong cho phep null, nullable = false
+    @Column(name = "image_url", nullable = false,length = 1000)
+    //@NotBlank
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     // Nhiều Product thuộc về 1 Category

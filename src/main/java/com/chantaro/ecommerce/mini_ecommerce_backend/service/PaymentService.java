@@ -1,8 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment.PaymentDTO;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
-import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Payment;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;

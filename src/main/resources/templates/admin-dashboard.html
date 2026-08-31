@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard - Chantaro Store</title>
+
+
+    <!-- =====================================================
+         BOOTSTRAP
+    ====================================================== -->
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+
+
+    <!-- =====================================================
+         BOOTSTRAP ICONS
+    ====================================================== -->
+
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+
+    <!-- =====================================================
+         CUSTOM CSS
+    ====================================================== -->
+
+    <link rel="stylesheet"
+          href="/css/style.css">
+
+
+    <!-- =====================================================
+         PAGE STYLE
+    ====================================================== -->
+
+    <style>
+
+        body {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .admin-card {
+            background-color: #111;
+            border: 1px solid #2b2b2b;
+            border-radius: 12px;
+        }
+
+        .admin-card:hover {
+            border-color: #444;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background-color: rgba(25, 135, 84, 0.12);
+            border: 1px solid rgba(25, 135, 84, 0.25);
+        }
+
+        .quick-action {
+            display: block;
+            height: 100%;
+            padding: 20px;
+            color: #fff;
+            text-decoration: none;
+            background-color: #111;
+            border: 1px solid #2b2b2b;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .quick-action:hover {
+            color: #fff;
+            border-color: #198754;
+            transform: translateY(-2px);
+        }
+
+        .quick-action-icon {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background-color: #000;
+            border: 1px solid #333;
+        }
+
+        .order-status-item {
+            background-color: #000;
+            border: 1px solid #292929;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .table-dark {
+            --bs-table-bg: #111;
+            --bs-table-border-color: #292929;
+        }
+
+        .table-dark th {
+            color: #aaa;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .table-dark td {
+            color: #ddd;
+        }
+
+        .low-stock-item {
+            background-color: #000;
+            border: 1px solid #292929;
+            border-radius: 10px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .text-muted-custom {
+            color: #888 !important;
+        }
+
+        .revenue-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .progress {
+            background-color: #292929;
+        }
+
+        .badge-soft-success {
+            background-color: rgba(25, 135, 84, 0.15);
+            color: #65d391;
+            border: 1px solid rgba(25, 135, 84, 0.25);
+        }
+
+        .badge-soft-warning {
+            background-color: rgba(255, 193, 7, 0.12);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.25);
+        }
+
+        .badge-soft-info {
+            background-color: rgba(13, 202, 240, 0.12);
+            color: #54d7ef;
+            border: 1px solid rgba(13, 202, 240, 0.25);
+        }
+
+        .badge-soft-primary {
+            background-color: rgba(13, 110, 253, 0.12);
+            color: #6ea8fe;
+            border: 1px solid rgba(13, 110, 253, 0.25);
+        }
+
+        .danger-stock {
+            color: #ff6b6b;
+        }
+
+
+    </style>
+
+</head>
+
+
+<body class="bg-black text-light">
+
+
+<!-- =========================================================
+     NAVBAR
+========================================================= -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary">
+
+    <div class="container">
+
+
+        <!-- =================================================
+             LOGO
+        ================================================== -->
+
+        <a class="navbar-brand fw-bold fs-4"
+           th:href="@{/}">
+
+            <i class="bi bi-laptop-fill text-success me-1"></i>
+
+            Chantaro Store
+
+        </a>
+
+
+        <!-- =================================================
+             RIGHT SIDE
+        ================================================== -->
+
+        <div class="d-flex align-items-center gap-3 ms-auto order-lg-2">
+
+
+            <!-- ACCOUNT -->
+
+            <div id="userInfo">
+
+                <a class="nav-link text-white"
+                   th:href="@{/login}">
+
+                    <i class="bi bi-person-circle fs-5"></i>
+
+                </a>
+
+            </div>
+
+
+            <!-- ADMIN -->
+
+            <div id="adminMenu">
+
+                <a class="nav-link text-success"
+                   th:href="@{/admin}">
+
+                    <i class="bi bi-speedometer2 fs-5"></i>
+
+                </a>
+
+            </div>
+
+
+            <!-- CART -->
+
+            <a id="cartMenu"
+               class="nav-link text-white"
+               th:href="@{/cart}">
+
+                <i class="bi bi-cart3 fs-5"></i>
+
+            </a>
+
+
+            <!-- MOBILE MENU -->
+
+            <button
+                    class="navbar-toggler border-0"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#nav"
+                    aria-controls="nav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+
+                <span class="navbar-toggler-icon"></span>
+
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             NAVIGATION
+        ================================================== -->
+
+        <div
+                class="collapse navbar-collapse justify-content-center order-lg-1"
+                id="nav">
+
+            <ul class="navbar-nav">
+
+
+                <li class="nav-item text-center">
+
+                    <a class="nav-link text-light"
+                       th:href="@{/}">
+
+                        Home
+
+                    </a>
+
+                </li>
+
+
+                <li class="nav-item text-center">
+
+                    <a class="nav-link text-light"
+                       th:href="@{/products}">
+
+                        Products
+
+                    </a>
+
+                </li>
+
+                <li class="nav-item text-center">
+
+                    <a class="nav-link text-light"
+                       th:href="@{/admin/categories}">
+
+                        Categories
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<main class="container py-5">
+
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="d-flex
+                flex-column
+                flex-md-row
+                justify-content-between
+                align-items-md-center
+                mb-5">
+
+
+        <div>
+
+            <div class="text-success
+                        small
+                        fw-semibold
+                        mb-2">
+
+                ADMIN PANEL
+
+            </div>
+
+
+            <h1 class="fw-bold mb-2">
+
+                Dashboard
+
+            </h1>
+
+
+            <p class="text-muted-custom mb-0">
+
+                Manage your store and monitor your business.
+
+            </p>
+
+        </div>
+
+
+        <!-- DATE -->
+
+        <div class="mt-3 mt-md-0">
+
+            <span class="badge
+                         bg-dark
+                         border
+                         border-secondary
+                         text-secondary
+                         px-3
+                         py-2">
+
+                <i class="bi bi-calendar3 me-2"></i>
+
+                August 25, 2026
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
+
+    <div class="row g-4 mb-5">
+
+
+        <!-- USERS -->
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="admin-card h-100">
+
+                <div class="p-4">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-start">
+
+
+                        <div>
+
+                            <p class="text-muted-custom mb-2">
+
+                                Total Users
+
+                            </p>
+
+
+                            <h3 class="fw-bold mb-0">
+
+                                1,248
+
+                            </h3>
+
+                        </div>
+
+
+                        <div class="stat-icon">
+
+                            <i class="bi bi-people-fill
+                                      text-success
+                                      fs-4"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mt-4">
+
+                        <span class="text-success small">
+
+                            <i class="bi bi-arrow-up"></i>
+
+                            12.5%
+
+                        </span>
+
+                        <span class="text-muted-custom small ms-1">
+
+                            vs last month
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCTS -->
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="admin-card h-100">
+
+                <div class="p-4">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-start">
+
+
+                        <div>
+
+                            <p class="text-muted-custom mb-2">
+
+                                Products
+
+                            </p>
+
+
+                            <h3 class="fw-bold mb-0">
+
+                                86
+
+                            </h3>
+
+                        </div>
+
+
+                        <div class="stat-icon">
+
+                            <i class="bi bi-box-seam-fill
+                                      text-success
+                                      fs-4"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mt-4">
+
+                        <span class="text-success small">
+
+                            <i class="bi bi-plus-lg"></i>
+
+                            5 new
+
+                        </span>
+
+                        <span class="text-muted-custom small ms-1">
+
+                            this month
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ORDERS -->
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="admin-card h-100">
+
+                <div class="p-4">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-start">
+
+
+                        <div>
+
+                            <p class="text-muted-custom mb-2">
+
+                                Orders
+
+                            </p>
+
+
+                            <h3 class="fw-bold mb-0">
+
+                                324
+
+                            </h3>
+
+                        </div>
+
+
+                        <div class="stat-icon">
+
+                            <i class="bi bi-cart-check-fill
+                                      text-success
+                                      fs-4"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mt-4">
+
+                        <span class="text-success small">
+
+                            <i class="bi bi-arrow-up"></i>
+
+                            8.2%
+
+                        </span>
+
+                        <span class="text-muted-custom small ms-1">
+
+                            vs last month
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- REVENUE -->
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="admin-card h-100">
+
+                <div class="p-4">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-start">
+
+
+                        <div>
+
+                            <p class="text-muted-custom mb-2">
+
+                                Revenue
+
+                            </p>
+
+
+                            <h3 class="fw-bold mb-0">
+
+                                ₫842M
+
+                            </h3>
+
+                        </div>
+
+
+                        <div class="stat-icon">
+
+                            <i class="bi bi-cash-stack
+                                      text-success
+                                      fs-4"></i>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mt-4">
+
+                        <span class="text-success small">
+
+                            <i class="bi bi-arrow-up"></i>
+
+                            15.8%
+
+                        </span>
+
+                        <span class="text-muted-custom small ms-1">
+
+                            vs last month
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         REVENUE + ORDER STATUS
+    ====================================================== -->
+
+    <div class="row g-4 mb-5">
+
+
+        <!-- =================================================
+             REVENUE
+        ================================================== -->
+
+        <div class="col-12 col-lg-7">
+
+            <div class="admin-card h-100">
+
+
+                <!-- HEADER -->
+
+                <div class="p-4 border-bottom border-secondary">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-center">
+
+                        <div>
+
+                            <div class="section-title">
+
+                                Sales Overview
+
+                            </div>
+
+                            <small class="text-muted-custom">
+
+                                Revenue for this month
+
+                            </small>
+
+                        </div>
+
+
+                        <select class="form-select
+                                       form-select-sm
+                                       bg-black
+                                       text-light
+                                       border-secondary"
+                                style="width: auto;">
+
+                            <option>August 2026</option>
+
+                            <option>July 2026</option>
+
+                            <option>June 2026</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BODY -->
+
+                <div class="p-4">
+
+
+                    <div class="d-flex
+                                align-items-end
+                                gap-3
+                                mb-4">
+
+                        <div class="revenue-value">
+
+                            ₫842,000,000
+
+                        </div>
+
+
+                        <div class="text-success small mb-1">
+
+                            <i class="bi bi-arrow-up"></i>
+
+                            15.8%
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SIMPLE CHART -->
+
+                    <div class="d-flex
+                                align-items-end
+                                justify-content-between
+                                gap-2"
+                         style="height: 180px;">
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 35%; width: 7%; opacity: .45;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 48%; width: 7%; opacity: .5;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 42%; width: 7%; opacity: .55;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 60%; width: 7%; opacity: .6;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 54%; width: 7%; opacity: .65;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 75%; width: 7%; opacity: .7;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 68%; width: 7%; opacity: .75;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 82%; width: 7%; opacity: .8;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 72%; width: 7%; opacity: .85;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 90%; width: 7%; opacity: .9;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 84%; width: 7%; opacity: .95;">
+                        </div>
+
+
+                        <div class="bg-success rounded-top"
+                             style="height: 100%; width: 7%;">
+                        </div>
+
+                    </div>
+
+
+                    <div class="d-flex
+                                justify-content-between
+                                text-muted-custom
+                                small
+                                mt-2">
+
+                        <span>Jan</span>
+                        <span>Feb</span>
+                        <span>Mar</span>
+                        <span>Apr</span>
+                        <span>May</span>
+                        <span>Jun</span>
+                        <span>Jul</span>
+                        <span>Aug</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ORDER STATUS
+        ================================================== -->
+
+        <div class="col-12 col-lg-5">
+
+            <div class="admin-card h-100">
+
+
+                <div class="p-4 border-bottom border-secondary">
+
+                    <div class="section-title">
+
+                        Order Status
+
+                    </div>
+
+                    <small class="text-muted-custom">
+
+                        Current order distribution
+
+                    </small>
+
+                </div>
+
+
+                <div class="p-4">
+
+
+                    <!-- PENDING -->
+
+                    <div class="order-status-item mb-3">
+
+                        <div class="d-flex
+                                    justify-content-between
+                                    mb-2">
+
+                            <span>
+
+                                <i class="bi bi-hourglass-split
+                                          text-warning
+                                          me-2"></i>
+
+                                Pending
+
+                            </span>
+
+
+                            <span class="text-warning fw-semibold">
+
+                                24
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="progress"
+                             style="height: 5px;">
+
+                            <div class="progress-bar bg-warning"
+                                 style="width: 18%;">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PAID -->
+
+                    <div class="order-status-item mb-3">
+
+                        <div class="d-flex
+                                    justify-content-between
+                                    mb-2">
+
+                            <span>
+
+                                <i class="bi bi-credit-card
+                                          text-info
+                                          me-2"></i>
+
+                                Paid
+
+                            </span>
+
+
+                            <span class="text-info fw-semibold">
+
+                                42
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="progress"
+                             style="height: 5px;">
+
+                            <div class="progress-bar bg-info"
+                                 style="width: 32%;">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SHIPPED -->
+
+                    <div class="order-status-item mb-3">
+
+                        <div class="d-flex
+                                    justify-content-between
+                                    mb-2">
+
+                            <span>
+
+                                <i class="bi bi-truck
+                                          text-primary
+                                          me-2"></i>
+
+                                Shipped
+
+                            </span>
+
+
+                            <span class="text-primary fw-semibold">
+
+                                36
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="progress"
+                             style="height: 5px;">
+
+                            <div class="progress-bar bg-primary"
+                                 style="width: 27%;">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DELIVERED -->
+
+                    <div class="order-status-item">
+
+                        <div class="d-flex
+                                    justify-content-between
+                                    mb-2">
+
+                            <span>
+
+                                <i class="bi bi-check-circle
+                                          text-success
+                                          me-2"></i>
+
+                                Delivered
+
+                            </span>
+
+
+                            <span class="text-success fw-semibold">
+
+                                222
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="progress"
+                             style="height: 5px;">
+
+                            <div class="progress-bar bg-success"
+                                 style="width: 85%;">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         RECENT ORDERS
+    ====================================================== -->
+
+    <div class="admin-card mb-5">
+
+
+        <!-- HEADER -->
+
+        <div class="p-4
+                    border-bottom
+                    border-secondary">
+
+            <div class="d-flex
+                        justify-content-between
+                        align-items-center">
+
+                <div>
+
+                    <div class="section-title">
+
+                        Recent Orders
+
+                    </div>
+
+                    <small class="text-muted-custom">
+
+                        Latest customer orders
+
+                    </small>
+
+                </div>
+
+
+                <a th:href="@{/admin/orders}"
+                   class="btn btn-sm btn-outline-light">
+
+                    View All
+
+                    <i class="bi bi-arrow-right ms-1"></i>
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- DESKTOP TABLE -->
+
+        <div class="table-responsive d-none d-md-block">
+
+            <table class="table table-dark
+                          table-hover
+                          align-middle
+                          mb-0">
+
+
+                <thead>
+
+                <tr>
+
+                    <th class="ps-4">
+                        Order
+                    </th>
+
+                    <th>
+                        Customer
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                    <th>
+                        Total
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th class="text-end pe-4">
+                        Action
+                    </th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                <!-- ORDER 1 -->
+
+                <tr>
+
+                    <td class="ps-4">
+
+                        <span class="fw-semibold">
+
+                            #ORD-10024
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        Nguyen Van A
+
+                    </td>
+
+
+                    <td class="text-muted-custom">
+
+                        Aug 24, 2026
+
+                    </td>
+
+
+                    <td class="fw-semibold">
+
+                        ₫35,000,000
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="badge badge-soft-success">
+
+                            Delivered
+
+                        </span>
+
+                    </td>
+
+
+                    <td class="text-end pe-4">
+
+                        <a href="#"
+                           class="btn btn-sm btn-outline-secondary">
+
+                            <i class="bi bi-eye"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+                <!-- ORDER 2 -->
+
+                <tr>
+
+                    <td class="ps-4">
+
+                        <span class="fw-semibold">
+
+                            #ORD-10023
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        Tran Van B
+
+                    </td>
+
+
+                    <td class="text-muted-custom">
+
+                        Aug 24, 2026
+
+                    </td>
+
+
+                    <td class="fw-semibold">
+
+                        ₫28,500,000
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="badge badge-soft-primary">
+
+                            Shipped
+
+                        </span>
+
+                    </td>
+
+
+                    <td class="text-end pe-4">
+
+                        <a href="#"
+                           class="btn btn-sm btn-outline-secondary">
+
+                            <i class="bi bi-eye"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+                <!-- ORDER 3 -->
+
+                <tr>
+
+                    <td class="ps-4">
+
+                        <span class="fw-semibold">
+
+                            #ORD-10022
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        Le Van C
+
+                    </td>
+
+
+                    <td class="text-muted-custom">
+
+                        Aug 23, 2026
+
+                    </td>
+
+
+                    <td class="fw-semibold">
+
+                        ₫22,000,000
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="badge badge-soft-info">
+
+                            Paid
+
+                        </span>
+
+                    </td>
+
+
+                    <td class="text-end pe-4">
+
+                        <a href="#"
+                           class="btn btn-sm btn-outline-secondary">
+
+                            <i class="bi bi-eye"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+                <!-- ORDER 4 -->
+
+                <tr>
+
+                    <td class="ps-4">
+
+                        <span class="fw-semibold">
+
+                            #ORD-10021
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        Pham Van D
+
+                    </td>
+
+
+                    <td class="text-muted-custom">
+
+                        Aug 23, 2026
+
+                    </td>
+
+
+                    <td class="fw-semibold">
+
+                        ₫15,800,000
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="badge badge-soft-warning">
+
+                            Pending
+
+                        </span>
+
+                    </td>
+
+
+                    <td class="text-end pe-4">
+
+                        <a href="#"
+                           class="btn btn-sm btn-outline-secondary">
+
+                            <i class="bi bi-eye"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- MOBILE ORDERS -->
+
+        <div class="d-md-none p-3">
+
+
+            <!-- ORDER 1 -->
+
+            <div class="low-stock-item p-3 mb-3">
+
+                <div class="d-flex
+                            justify-content-between
+                            mb-3">
+
+                    <div>
+
+                        <small class="text-muted-custom">
+
+                            Order
+
+                        </small>
+
+                        <div class="fw-semibold">
+
+                            #ORD-10024
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="badge badge-soft-success">
+
+                        Delivered
+
+                    </span>
+
+                </div>
+
+
+                <div class="row g-3">
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Customer
+
+                        </small>
+
+                        Nguyen Van A
+
+                    </div>
+
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Date
+
+                        </small>
+
+                        Aug 24, 2026
+
+                    </div>
+
+
+                    <div class="col-12">
+
+                        <small class="text-muted-custom d-block">
+
+                            Total
+
+                        </small>
+
+                        <strong>
+
+                            ₫35,000,000
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="text-end mt-3">
+
+                    <a href="#"
+                       class="btn btn-sm btn-outline-light">
+
+                        <i class="bi bi-eye me-1"></i>
+
+                        View Order
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDER 2 -->
+
+            <div class="low-stock-item p-3 mb-3">
+
+                <div class="d-flex
+                            justify-content-between
+                            mb-3">
+
+                    <div>
+
+                        <small class="text-muted-custom">
+
+                            Order
+
+                        </small>
+
+                        <div class="fw-semibold">
+
+                            #ORD-10023
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="badge badge-soft-primary">
+
+                        Shipped
+
+                    </span>
+
+                </div>
+
+
+                <div class="row g-3">
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Customer
+
+                        </small>
+
+                        Tran Van B
+
+                    </div>
+
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Date
+
+                        </small>
+
+                        Aug 24, 2026
+
+                    </div>
+
+
+                    <div class="col-12">
+
+                        <small class="text-muted-custom d-block">
+
+                            Total
+
+                        </small>
+
+                        <strong>
+
+                            ₫28,500,000
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="text-end mt-3">
+
+                    <a href="#"
+                       class="btn btn-sm btn-outline-light">
+
+                        <i class="bi bi-eye me-1"></i>
+
+                        View Order
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDER 3 -->
+
+            <div class="low-stock-item p-3 mb-3">
+
+                <div class="d-flex
+                            justify-content-between
+                            mb-3">
+
+                    <div>
+
+                        <small class="text-muted-custom">
+
+                            Order
+
+                        </small>
+
+                        <div class="fw-semibold">
+
+                            #ORD-10022
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="badge badge-soft-info">
+
+                        Paid
+
+                    </span>
+
+                </div>
+
+
+                <div class="row g-3">
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Customer
+
+                        </small>
+
+                        Le Van C
+
+                    </div>
+
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Date
+
+                        </small>
+
+                        Aug 23, 2026
+
+                    </div>
+
+
+                    <div class="col-12">
+
+                        <small class="text-muted-custom d-block">
+
+                            Total
+
+                        </small>
+
+                        <strong>
+
+                            ₫22,000,000
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="text-end mt-3">
+
+                    <a href="#"
+                       class="btn btn-sm btn-outline-light">
+
+                        <i class="bi bi-eye me-1"></i>
+
+                        View Order
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDER 4 -->
+
+            <div class="low-stock-item p-3">
+
+                <div class="d-flex
+                            justify-content-between
+                            mb-3">
+
+                    <div>
+
+                        <small class="text-muted-custom">
+
+                            Order
+
+                        </small>
+
+                        <div class="fw-semibold">
+
+                            #ORD-10021
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="badge badge-soft-warning">
+
+                        Pending
+
+                    </span>
+
+                </div>
+
+
+                <div class="row g-3">
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Customer
+
+                        </small>
+
+                        Pham Van D
+
+                    </div>
+
+
+                    <div class="col-6">
+
+                        <small class="text-muted-custom d-block">
+
+                            Date
+
+                        </small>
+
+                        Aug 23, 2026
+
+                    </div>
+
+
+                    <div class="col-12">
+
+                        <small class="text-muted-custom d-block">
+
+                            Total
+
+                        </small>
+
+                        <strong>
+
+                            ₫15,800,000
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="text-end mt-3">
+
+                    <a href="#"
+                       class="btn btn-sm btn-outline-light">
+
+                        <i class="bi bi-eye me-1"></i>
+
+                        View Order
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         LOW STOCK
+    ====================================================== -->
+
+    <div class="admin-card mb-5">
+
+
+        <!-- HEADER -->
+
+        <div class="p-4 border-bottom border-secondary">
+
+            <div class="d-flex
+                        justify-content-between
+                        align-items-center">
+
+                <div>
+
+                    <div class="section-title">
+
+                        Low Stock
+
+                    </div>
+
+                    <small class="text-muted-custom">
+
+                        Products that need attention
+
+                    </small>
+
+                </div>
+
+
+                <span class="badge badge-soft-warning">
+
+                    3 Products
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- BODY -->
+
+        <div class="p-4">
+
+            <div class="row g-3">
+
+
+                <!-- PRODUCT 1 -->
+
+                <div class="col-12 col-md-4">
+
+                    <div class="low-stock-item p-3 h-100">
+
+                        <div class="d-flex
+                                    align-items-center
+                                    justify-content-between">
+
+
+                            <div class="d-flex
+                                        align-items-center">
+
+
+                                <div class="quick-action-icon me-3">
+
+                                    <i class="bi bi-phone
+                                              text-light
+                                              fs-5"></i>
+
+                                </div>
+
+
+                                <div>
+
+                                    <div class="fw-semibold">
+
+                                        iPhone 15 Pro
+
+                                    </div>
+
+                                    <small class="text-muted-custom">
+
+                                        SKU: IP15P-001
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="text-end">
+
+                                <div class="fw-bold
+                                            fs-5
+                                            danger-stock">
+
+                                    3
+
+                                </div>
+
+                                <small class="text-muted-custom">
+
+                                    left
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PRODUCT 2 -->
+
+                <div class="col-12 col-md-4">
+
+                    <div class="low-stock-item p-3 h-100">
+
+                        <div class="d-flex
+                                    align-items-center
+                                    justify-content-between">
+
+
+                            <div class="d-flex
+                                        align-items-center">
+
+
+                                <div class="quick-action-icon me-3">
+
+                                    <i class="bi bi-laptop
+                                              text-light
+                                              fs-5"></i>
+
+                                </div>
+
+
+                                <div>
+
+                                    <div class="fw-semibold">
+
+                                        MacBook Pro
+
+                                    </div>
+
+                                    <small class="text-muted-custom">
+
+                                        SKU: MBP-001
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="text-end">
+
+                                <div class="fw-bold
+                                            fs-5
+                                            danger-stock">
+
+                                    5
+
+                                </div>
+
+                                <small class="text-muted-custom">
+
+                                    left
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PRODUCT 3 -->
+
+                <div class="col-12 col-md-4">
+
+                    <div class="low-stock-item p-3 h-100">
+
+                        <div class="d-flex
+                                    align-items-center
+                                    justify-content-between">
+
+
+                            <div class="d-flex
+                                        align-items-center">
+
+
+                                <div class="quick-action-icon me-3">
+
+                                    <i class="bi bi-earbuds
+                                              text-light
+                                              fs-5"></i>
+
+                                </div>
+
+
+                                <div>
+
+                                    <div class="fw-semibold">
+
+                                        AirPods Pro
+
+                                    </div>
+
+                                    <small class="text-muted-custom">
+
+                                        SKU: APP-001
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="text-end">
+
+                                <div class="fw-bold
+                                            fs-5
+                                            danger-stock">
+
+                                    2
+
+                                </div>
+
+                                <small class="text-muted-custom">
+
+                                    left
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         QUICK ACTIONS
+    ====================================================== -->
+
+    <div class="mb-5">
+
+
+        <div class="d-flex
+                    justify-content-between
+                    align-items-center
+                    mb-3">
+
+            <div>
+
+                <div class="section-title">
+
+                    Quick Actions
+
+                </div>
+
+                <small class="text-muted-custom">
+
+                    Manage your store
+
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="row g-3">
+
+
+            <!-- PRODUCTS -->
+
+            <div class="col-6 col-md-3">
+
+                <a th:href="@{/admin/products}"
+                   class="quick-action">
+
+                    <div class="quick-action-icon mb-3">
+
+                        <i class="bi bi-box-seam
+                                  text-success
+                                  fs-5"></i>
+
+                    </div>
+
+
+                    <div class="fw-semibold">
+
+                        Products
+
+                    </div>
+
+
+                    <small class="text-muted-custom">
+
+                        Manage products
+
+                    </small>
+
+
+                    <div class="text-end mt-3">
+
+                        <i class="bi bi-arrow-up-right
+                                  text-muted-custom"></i>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+
+            <!-- ORDERS -->
+
+            <div class="col-6 col-md-3">
+
+                <a th:href="@{/admin/orders}"
+                   class="quick-action">
+
+                    <div class="quick-action-icon mb-3">
+
+                        <i class="bi bi-cart-check
+                                  text-success
+                                  fs-5"></i>
+
+                    </div>
+
+
+                    <div class="fw-semibold">
+
+                        Orders
+
+                    </div>
+
+
+                    <small class="text-muted-custom">
+
+                        Manage orders
+
+                    </small>
+
+
+                    <div class="text-end mt-3">
+
+                        <i class="bi bi-arrow-up-right
+                                  text-muted-custom"></i>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+
+            <!-- USERS -->
+
+            <div class="col-6 col-md-3">
+
+                <a th:href="@{/admin/users}"
+                   class="quick-action">
+
+                    <div class="quick-action-icon mb-3">
+
+                        <i class="bi bi-people
+                                  text-success
+                                  fs-5"></i>
+
+                    </div>
+
+
+                    <div class="fw-semibold">
+
+                        Users
+
+                    </div>
+
+
+                    <small class="text-muted-custom">
+
+                        Manage users
+
+                    </small>
+
+
+                    <div class="text-end mt-3">
+
+                        <i class="bi bi-arrow-up-right
+                                  text-muted-custom"></i>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+
+            <!-- CATEGORIES -->
+
+            <div class="col-6 col-md-3">
+
+                <a th:href="@{/admin/categories}"
+                   class="quick-action">
+
+                    <div class="quick-action-icon mb-3">
+
+                        <i class="bi bi-tags
+                                  text-success
+                                  fs-5"></i>
+
+                    </div>
+
+
+                    <div class="fw-semibold">
+
+                        Categories
+
+                    </div>
+
+
+                    <small class="text-muted-custom">
+
+                        Manage categories
+
+                    </small>
+
+
+                    <div class="text-end mt-3">
+
+                        <i class="bi bi-arrow-up-right
+                                  text-muted-custom"></i>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</main>
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<footer class="bg-black
+              border-top
+              border-secondary
+              text-secondary
+              text-center
+              py-4">
+
+
+    <div class="container">
+
+        <small>
+
+            © 2026 Chantaro Store
+
+        </small>
+
+    </div>
+
+</footer>
+
+
+<!-- =========================================================
+     BOOTSTRAP JS
+========================================================= -->
+
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<!-- =========================================================
+     NAVBAR JS
+========================================================= -->
+
+<script
+        type="module"
+        src="/js/navbar.js">
+</script>
+
+
+<!-- =========================================================
+     ADMIN JS
+========================================================= -->
+
+<script
+        type="module"
+        src="/js/admin.js">
+</script>
+
+
+</body>
+
+</html>

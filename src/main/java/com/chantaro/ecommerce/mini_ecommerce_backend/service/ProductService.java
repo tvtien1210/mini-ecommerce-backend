@@ -11,12 +11,17 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CartItemReposito
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CategoryRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.OrderItemRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -24,18 +29,14 @@ public class ProductService {
     private final CartItemRepository cartItemRepository;
     private final CategoryRepository categoryRepository;
 
-    @Autowired
-    public ProductService(ProductRepository productRepository, OrderItemRepository orderItemRepository, CartItemRepository cartItemRepository, CategoryRepository categoryRepository) {
-        this.productRepository = productRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.cartItemRepository = cartItemRepository;
-        this.categoryRepository = categoryRepository;
-    }
-
-    public List<ProductDTO> getAllProduct() {
+    //GET ALL PRODUCT
+    @Transactional(readOnly = true)
+    public List<ProductDTO> getAllProducts() {
         return productRepository.findAll().stream().map(product -> ProductMapper.toDTO(product)).toList();
     }
 
+
+    //GET PRODUCT BY ID
     public ProductDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -43,54 +44,54 @@ public class ProductService {
     }
 
 
+
+    //CREATE PRODUCT
+
     // Tối ưu hơn
     // 最適化された方法（パフォーマンス向上）
-    public List<ProductDTO> saveProduct(List<CreateProductRequest> requests) {
+    @Transactional
+    public List<ProductDTO> createProduct(List<CreateProductRequest> requests) {
 
-        // 1. Convert danh sách Request (DTO từ client)
-        //    → sang danh sách Entity Product để lưu DB
-        // 1. クライアントから受け取った Request DTO のリストを
-        //    DB保存用の Product Entity リストへ変換する
+        // Convert danh sách Request (DTO từ client) → sang danh sách Entity Product để lưu DB
+        // クライアントから受け取った Request DTO のリストをDB保存用の Product Entity リストへ変換する
         List<Product> products = requests.stream().map(rq -> {
 
-            // 2. Tìm category theo categoryId từ request
-            //    Nếu không tìm thấy → báo lỗi ngay
-            // 2. request の categoryId を使って Category を検索
-            //    見つからない場合は即エラーを返す
+            // Tìm category theo categoryId từ request -> Nếu không tìm thấy → báo lỗi ngay
+            // request の categoryId を使って Category を検索 -> 見つからない場合は即エラーを返す
             Category category = categoryRepository.findById(rq.getCategoryId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-            // 3. Tạo object Product mới (entity để lưu database)
-            // 3. DB保存用の新しい Product Entity を作成
+            //Tạo object Product mới (entity để lưu database)
+            //DB保存用の新しい Product Entity を作成
             Product p = new Product();
 
-            // 4. Map dữ liệu từ request → entity Product
-            // 4. request のデータを Product Entity にマッピング
+            //Map dữ liệu từ request → entity Product
+            //request のデータを Product Entity にマッピング
             p.setName(rq.getName());
             p.setDescription(rq.getDescription());
             p.setPrice(rq.getPrice());
+            p.setCurrency(rq.getCurrency());
             p.setStock(rq.getStock());
+            p.setImageUrl(rq.getImageUrl());
 
-            // 5. Gán category (FK relationship)
-            //    Nếu không set → category_id trong DB sẽ NULL → lỗi dữ liệu
-            // 5. category を設定（外部キー関連）
-            //    設定しない場合、DB の category_id が NULL になりデータ不整合が発生する
+            // Gán category (FK relationship) -> Nếu không set → category_id trong DB sẽ NULL → lỗi dữ liệu
+            //category を設定（外部キー関連）-> 設定しない場合、DB の category_id が NULL になりデータ不整合が発生する
             p.setCategory(category);
 
-            // 6. Trả về product để đưa vào list
-            // 6. list に追加するため Product を返す
+            // Trả về product để đưa vào list
+            // list に追加するため Product を返す
             return p;
 
         }).toList();
 
-        // 7. Lưu toàn bộ danh sách Product vào database cùng lúc (batch insert)
-        // 7. Product リストを一括で DB に保存する（バッチインサート）
+        //Lưu toàn bộ danh sách Product vào database cùng lúc (batch insert)
+        //Product リストを一括で DB に保存する（バッチインサート）
         List<Product> saved = productRepository.saveAll(products); // 🍺-> saveAll: lưu luôn tất cả một lúc, tối ưu code
         // 🍺 saveAll: 一括保存することでコードとパフォーマンスを最適化
 
-        // 8. Convert từ Entity (Product) → DTO để trả về cho client
+        // Convert từ Entity (Product) → DTO để trả về cho client
         // product chính là từng phần tử trong saved (map = for(...))
-        // 8. Entity(Product) → DTO に変換してクライアントへ返却
+        // Entity(Product) → DTO に変換してクライアントへ返却
         // product は saved リスト内の各要素
         return saved.stream()
                 .map(product -> ProductMapper.toDTO(product))
@@ -179,4 +180,16 @@ public class ProductService {
 
         productRepository.delete(product);
     }
+
+    //PAGINATION
+
+    public Page<Product> getProducts(int page, int size) {
+
+        // Tạo yêu cầu phân trang: page = trang, size = số sản phẩm/trang
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Lấy danh sách Product theo yêu cầu phân trang từ database
+        return productRepository.findAll(pageable);
+    }
+
 }

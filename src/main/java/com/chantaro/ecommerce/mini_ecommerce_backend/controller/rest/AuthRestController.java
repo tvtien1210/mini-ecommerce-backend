@@ -8,9 +8,12 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.service.CustomUserDetailsService;
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtService;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +48,7 @@ public class AuthRestController {
 
 
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody LoginRequest rq) {
+    public Map<String, Object> login(@RequestBody LoginRequest rq, HttpServletResponse response) {
 
         //Buoc 1: Kiem tra username, password co dung khong?
         authenticationManager.authenticate(
@@ -61,6 +65,35 @@ public class AuthRestController {
         String username = jwtService.extractUsername(accessToken);
         List<String> roles = jwtService.extractRoles(accessToken);
 
+        // Tạo JWT Cookie tên là "accessToken"
+        ResponseCookie cookie = ResponseCookie
+                .from("accessToken", accessToken)
+
+                // JavaScript không thể đọc cookie
+                // Giúp giảm nguy cơ đánh cắp JWT qua XSS
+                .httpOnly(true)
+
+                // false: cho phép gửi cookie qua HTTP, phù hợp localhost khi development
+                // Khi deploy HTTPS thật hoặc dùng ngrok HTTPS nên đổi thành true
+                .secure(false)
+
+                // Cookie có hiệu lực cho toàn bộ URL của website
+                // Ví dụ: /, /admin/products, /api/products, ...
+                .path("/")
+
+                // Cookie hết hạn sau 30 phút
+                .maxAge(Duration.ofMinutes(30))
+
+                // Cookie được gửi trong các request điều hướng thông thường
+                // Phù hợp với frontend/backend cùng site
+                .sameSite("Lax")
+
+                // Hoàn tất việc tạo cookie
+                .build();
+
+// Thêm cookie vào HTTP Response.
+// Sau khi login thành công, browser sẽ nhận và lưu cookie "accessToken".
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         //Buoc 3: tao token
         return Map.of("accessToken", accessToken,

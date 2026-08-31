@@ -1,4 +1,4 @@
-package com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment;
+package com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatusCode;
 import lombok.AllArgsConstructor;

@@ -130,6 +130,11 @@ public class SecurityConfig {
                         .permitAll()
 
 
+                        // Show category for all
+                        .requestMatchers("/api/categories/**")
+                        .permitAll()
+
+
                         // =========================================================
                         // PUBLIC RESOURCES
                         // =========================================================
@@ -137,7 +142,7 @@ public class SecurityConfig {
                         // Static resources
                         .requestMatchers(
                                 "/images/**",
-                                "/css/**",
+                                "/css/*css*",
                                 "/js/**",
                                 "/favicon.ico"
                         ).permitAll()

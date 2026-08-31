@@ -1,6 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment.PaymentDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.checkout.CheckoutDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.order.OrderDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.orderstatus.UpdateOrderStatusRequest;

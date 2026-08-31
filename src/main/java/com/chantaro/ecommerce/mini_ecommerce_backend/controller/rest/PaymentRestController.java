@@ -1,10 +1,9 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.payment.PaymentDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
