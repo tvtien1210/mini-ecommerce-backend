@@ -198,8 +198,9 @@ function renderMobileProducts(products){
             <div class="d-flex gap-3 align-items-start">
 
                 <!-- IMAGE -->
+                <!-- ${product.imageUrl || ""} , hoac || tra ve chuoi "" rat quan trong, neu khong se tra ve null, ma database dang la not null-->
                 <img
-                    src="${product.imageUrl}"
+                    src="${product.imageUrl || ""}"
                     alt="${escapeHtml(product.name)}"
                     class="product-mobile-image rounded border">
 
@@ -433,10 +434,6 @@ function renderDesktopProducts(products){
         })
      })
 }
-
-
-
-
 
 
 //ADD OR EDIT PRODUCT FORM KHI AN SUBMIT

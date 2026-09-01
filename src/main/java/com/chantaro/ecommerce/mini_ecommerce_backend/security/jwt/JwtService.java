@@ -130,7 +130,9 @@ public class JwtService {
     // exp : expiration time
     // roles : ROLE_ADMIN,...
     // Method này parse JWT rồi lấy trường exp
-    private Date extractExpiration(String token) {
+
+    //Để gọi hàm này từ AuthService, nó không được để private
+        public Date extractExpiration(String token) {
 
         return Jwts.parserBuilder()
 

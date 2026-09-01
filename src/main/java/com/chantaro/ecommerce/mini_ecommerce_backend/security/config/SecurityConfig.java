@@ -5,7 +5,6 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.security.config;
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtFilter;
 
 // ===== Import Spring =====
-import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -125,9 +124,16 @@ public class SecurityConfig {
                         // PUBLIC API - AUTHENTICATION
                         // =========================================================
 
-                        // Login / Register / Authentication
-                        .requestMatchers("/api/auth/**")
-                        .permitAll()
+                        // Những API không cần đăng nhập
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register"
+                        ).permitAll()
+
+                        // API lấy thông tin user hiện tại
+                        // Bắt buộc phải có JWT
+                        .requestMatchers("/api/auth/me")
+                        .authenticated()
 
 
                         // Show category for all
@@ -368,3 +374,19 @@ ADMIN
  | CRUD Product
  | Manage User
  | View/Update Order*/
+
+
+
+//return http.build();
+//Khi Spring Boot tạo SecurityFilterChain,
+//Spring Security sẽ đăng ký hệ thống filter của nó.
+//Từ đó request đi vào ứng dụng sẽ được Spring Security xử lý theo cấu hình.
+
+
+/*Vì vậy nếu "code nào kết nối hệ thống với Spring Security để authentication được kiểm tra?" thì nhìn vào SecurityFilterChain + http.build().
+Nếu "URL nào bắt buộc phải authentication?" thì nhìn vào .authenticated().*/
+
+/*Khi Tomcat nhận request:
+GET /api/auth/me
+nó chuyển request vào hệ thống Filter.
+Spring Security đã đăng ký các Filter của nó, nên request đi qua:*/

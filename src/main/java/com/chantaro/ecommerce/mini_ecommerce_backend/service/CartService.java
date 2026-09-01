@@ -13,7 +13,6 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CartItemReposito
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CartRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.UserRepository;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.net.BindException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;

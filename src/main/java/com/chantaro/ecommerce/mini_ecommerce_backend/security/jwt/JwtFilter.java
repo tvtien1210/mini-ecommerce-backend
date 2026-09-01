@@ -15,66 +15,66 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-//JwtFilter = filter kiểm tra JWT trong mỗi request, dùng JwtService để decode + validate, sau đó set user vào SecurityContext.
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-    private JwtService jwtService;
-    private CustomUserDetailsService customUserDetailsService;
+
+    private final JwtService jwtService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Autowired
-    public JwtFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService) {
+    public JwtFilter(
+            JwtService jwtService,
+            CustomUserDetailsService customUserDetailsService
+    ) {
         this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
-
-
     }
 
-
-    //shouldNotFilter() là method của OncePerRequestFilter.
-    //Tránh Spring Security vẫn gọi JwtFilter trước, sau đó mới tới bước Authorization.
-    //Ví dụ như ipn không cần filter mà filter vẫn gọi -> filter không catch(sẽ thành ExpiredJwtException) -> request chết luôn
-    //Nếu trả về true -> Spring không gọi doFilterInternal() nữa.
+    // Những request này không cần JWT
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
-        // Lấy đường dẫn request hiện tại
         String path = request.getServletPath();
 
-        // Trả về true nếu URL không cần kiểm tra JWT
         return path.equals("/api/payment/ipn")
                 || path.equals("/api/payment/return")
-                || path.startsWith("/api/auth/")
+                || path.equals("/api/auth/login")
+                || path.equals("/api/auth/register")
+                || path.equals("/api/auth/refresh")
+
+                // Frontend public files
                 || path.startsWith("/css/")
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
                 || path.equals("/favicon.ico");
     }
 
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
+        // Token ban đầu chưa có
         String token = null;
 
-
-        // Ưu tiên Authorization header
-
-        //lay header Authorization (vi du Authorization : Bearer alfj-adlfn-andl), thi code nay se lay duoc doan tu Bearer tro di
+        // Ưu tiên lấy JWT từ Authorization Header
         String header = request.getHeader("Authorization");
 
-        //Kiem tra xem co token hay khong, va chuoi token co Bearer dung dau khong
         if (header != null && header.startsWith("Bearer ")) {
-
-            //nếu có header (true) lay token, (cat 7 ky substring Bearer+daucach)
             token = header.substring(7);
         }
 
-        //nếu  không có header thì lấy JWT từ cookie
+        // Nếu không có Header → lấy JWT từ Cookie
+        // Hiện tại chưa lấy được token từ Header → thử tìm token trong Cookie.
         if (token == null || token.isBlank()) {
+
             Cookie[] cookies = request.getCookies();
 
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
+
                     if ("accessToken".equals(cookie.getName())) {
                         token = cookie.getValue();
                         break;
@@ -83,63 +83,51 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
-        // Nếu request không chứa JWT trong cookie:
-        // 1. JwtFilter không thể xác thực người dùng.
-        // 2. Cho phép request tiếp tục đi qua các filter tiếp theo trong Security Filter Chain.
-        // 3. Spring Security sẽ tiếp tục xử lý request.
-        // 4. Nếu URL là public (permitAll) -> request được phép truy cập.
-        // 5. Nếu URL yêu cầu đăng nhập/xác thực -> Spring Security sẽ từ chối và trả về lỗi
-        //    (ví dụ: 401 Unauthorized hoặc 403 Forbidden tùy cấu hình).
-        // 6. return để kết thúc phương thức JwtFilter tại đây,
-        //    tránh chạy tiếp logic xác thực JWT bên dưới.
+        // Không có JWT → cho request đi tiếp
+        // Sau khi đã thử cả Header và Cookie, nếu vẫn không có token thì bỏ qua việc xác thực JWT.
         if (token == null || token.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
-
 
         try {
 
             // Lấy username từ JWT
             String username = jwtService.extractUsername(token);
 
-            // Chỉ authenticate nếu request chưa có Authentication
-            if (username != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
+            // Nếu chưa có Authentication → xác thực user
+            if (username != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // Lấy thông tin user mới nhất từ Database
+                // Lấy user từ Database
                 UserDetails user =
                         customUserDetailsService.loadUserByUsername(username);
 
-                // Kiểm tra token:
-                // - Username trong token có khớp với DB không
-                // - Token còn hạn sử dụng hay không
+                // Kiểm tra JWT hợp lệ và còn hạn
                 if (jwtService.isTokenValid(token, user)) {
 
-                    //null là vì case này token của user này vẫn còn hạn, nên chỉ cần xác thực qua user + token thôi, không cần password nữa nên pw = null
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    // Tạo Authentication từ user + authorities
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    user,
+                                    null,
+                                    user.getAuthorities()
+                            );
 
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    // Lưu Authentication vào SecurityContext
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(authentication);
                 }
             }
 
-            //Dùng try catch để:
-
-            //Nếu token còn hạn code sẽ dừng tại đây
-            //---------
-
-            //Nếu token hết hạn, sẽ catch và chạy tiếp filterChain.doFilter(request, response);
-            //Lúc này SecurityContext không có Authentication, Request này chưa đăng nhập, Spring sẽ tự trả:401 Unauthorized
-            //Tránh trường hợp JWT hết hạn là request sẽ trả về 500 Internal Server Error (lỗi máy chủ nội bộ) thay vì 401 Unauthorized (chưa xác thực)
         } catch (Exception e) {
-            // Token không hợp lệ thì bỏ qua.
-            // Không throw -> tránh lộ thông tin
+
+            // JWT không hợp lệ / hết hạn → bỏ qua
+            // SecurityContext vẫn không có Authentication
         }
 
-        // Tiếp tục Security Filter Chain
+        // Cho request đi tiếp đến filter tiếp theo
         filterChain.doFilter(request, response);
     }
-
-
 }
-

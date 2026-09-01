@@ -2,29 +2,40 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.CreateRegisterRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.RegisterDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.CurrentUserDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Role;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
+import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.UserMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.RoleRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.WebUtils;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
+    private final JwtService jwtService;
 
-    @Autowired
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.roleRepository = roleRepository;
-    }
 
     public RegisterDTO register(CreateRegisterRequest request) {
 
@@ -56,7 +67,7 @@ public class AuthService {
 
         //ROLE
         Role role = roleRepository.findByName("ROLE_CUSTOMER")
-                .orElseThrow(()-> new RuntimeException("ROLE_CUSTOMER not found"));
+                .orElseThrow(() -> new RuntimeException("ROLE_CUSTOMER not found"));
 
         user.addRole(role);
 
@@ -70,6 +81,42 @@ public class AuthService {
         );
 
 
+    }
+
+    public CurrentUserDTO getCurrentUser(HttpServletRequest request) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(
+                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+                );
+
+        // Lấy Cookie accessToken từ request
+        Cookie cookie = WebUtils.getCookie(request, "accessToken");
+
+        // Biến lưu thời gian JWT hết hạn
+        String expiresAt = null;
+
+        if (cookie != null) {
+
+            // Lấy thời gian hết hạn từ JWT
+            Date expiration = jwtService.extractExpiration(cookie.getValue());
+
+            // Chuyển sang giờ Nhật Bản
+            LocalDateTime dateTime = expiration.toInstant()
+                    .atZone(ZoneId.of("Asia/Tokyo"))
+                    .toLocalDateTime();
+
+            // Format thành yyyy-MM-dd HH:mm:ss
+            expiresAt = dateTime.format(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            );
+        }
+        return UserMapper.toCurrentUserDTO(user, expiresAt);
     }
 }
 

@@ -54,15 +54,6 @@ public class UserRestController {
         return userService.getUserById(id);
     }
 
-    @GetMapping("/me")
-    public UserDTO getCurrentUser(Authentication authentication) {
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        return UserMapper.toDTO(user);
-    }
-
     @PostMapping
     public UserDTO createUser(@RequestBody CreateUserRequest req) {
         return UserMapper.toDTO(userService.saveUser(req));

@@ -1,22 +1,19 @@
 //Lấy form login thông qua id ="loginForm"
 //Khi người dùng bấm nút Login (submit form), thì chạy funtion phía dưới
 
-//const myForm = document.getElementById("loginForm");
-//console.log(myForm);
+//Lay DOM loginForm
+const loginFormElement = document.getElementById("loginForm");
 
-document
-.getElementById("loginForm")
-.addEventListener("submit", async function(e){
+const usernameInput = document.getElementById("username");
+
+const passwordInput = document.getElementById("password");
+
+//Tao su kien khi an submit
+loginFormElement.addEventListener("submit", async function(e){
     //Ngăn trình duyệt reload lại trang mặc định của form
     //prevent: ngăn chặn, ngăn ngừa
     //Nếu không có dòng này, form sẽ submit theo HTML truyền thống, chứ không phải thymeleaf
     e.preventDefault();
-
-    //Lấy username người dùng nhập trong input id = "username"
-    const username = document.getElementById("username").value;
-
-    //Lấy password người dùng nhập trong input id = "password"
-    const password = document.getElementById("password").value;
 
     //Gửi request POST tới Spring Boot API login
     //Endpoint này xử lý authentication và tạo JWT token
@@ -34,29 +31,21 @@ document
         //Convert object JavaScript thành JSON String
         body: JSON.stringify(
         {
-        username:username,
-        password:password
+        username:usernameInput.value,
+        password:passwordInput.value
         })
 
     })
 
 
-    const loginError = document.getElementById("loginError");
-    const loginErrorMessage = document.getElementById("loginErrorMessage");
+    const loginErrorElement = document.getElementById("loginError");
+    const loginErrorMessageElement = document.getElementById("loginErrorMessage");
     //Kiểm tra HTTP status code
     if(!response.ok){
-    loginErrorMessage.innerText=`Error: Username or password incorrect`;
-    loginError.classList.remove("d-none");
+    loginErrorMessageElement.innerText=`Error: Username or password incorrect`;
+    loginErrorElement.classList.remove("d-none");
     return;
     }
-
-    //Đọc response từ Spring Boot
-    //Server trả về JSON chứa JWT token
-    const data = await response.json();
-
-    //Lưu JWT token vào LocalStorage của trình duyệt
-    localStorage.setItem("accessToken",data.accessToken);
-    localStorage.setItem("refreshToken",data.refreshToken);
 
 
     //Login thành công
@@ -64,4 +53,3 @@ document
     window.location.href="/";
 });
 
-//Login -> accessToken -> localStorage -> decodeJWT -> user,role -> navbar USER, ADMIN
