@@ -1,6 +1,8 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.service.CustomUserDetailsService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -36,11 +38,16 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        return path.equals("/api/payment/ipn")
+        return path.equals("/") // equasls : phải bằng
+                || path.equals("/login")
+                || path.startsWith("/register") //startsWith : phải bắt đầu bằng
+                || path.equals("/api/auth/refresh")
+                || path.equals("/categories")
+                || path.equals("/api/payment/ipn")
                 || path.equals("/api/payment/return")
                 || path.equals("/api/auth/login")
                 || path.equals("/api/auth/register")
-                || path.equals("/api/auth/refresh")
+
 
                 // Frontend public files
                 || path.startsWith("/css/")
@@ -121,13 +128,43 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
 
-        } catch (Exception e) {
+        } catch (ExpiredJwtException e) {
 
-            // JWT không hợp lệ / hết hạn → bỏ qua
-            // SecurityContext vẫn không có Authentication
+            // Access Token hết hạn → trả 401
+            response.setStatus(401);
+            response.setContentType("application/json");
+
+            response.getWriter().write("""
+                    {
+                        "code": 401,
+                        "message": "ACCESS_TOKEN_EXPIRED"
+                    }
+                    """);
+
+            return;
+
+        } catch (JwtException e) {
+
+            // Trả về HTTP Status 401 → Access Token không hợp lệ
+            response.setStatus(401);
+
+            // Báo cho Frontend biết Response Body có dạng JSON
+            response.setContentType("application/json");
+
+            // Gửi thông tin lỗi về cho Frontend
+            response.getWriter().write("""
+                    {
+                        "code": 401,
+                        "message": "INVALID_ACCESS_TOKEN"
+                    }
+                    """);
+
+            return;
         }
 
         // Cho request đi tiếp đến filter tiếp theo
         filterChain.doFilter(request, response);
     }
+
+
 }

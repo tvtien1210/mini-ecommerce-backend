@@ -168,6 +168,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                     await logout();
 
+                    window.location.href = "/";;
+
                 });
             }
 

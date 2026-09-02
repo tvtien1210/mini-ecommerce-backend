@@ -43,29 +43,27 @@
     <style>
 
     .pagination .page-link {
-        background-color: #212529;
-        border-color: #495057;
-        color: white;
+    background-color: #212529;
+    border-color: #495057;
+    color: white;
     }
 
     .pagination .page-link:hover {
-        background-color: #343a40;
-        border-color: #198754;
-        color: white;
+    background-color: #343a40;
+    border-color: #198754;
+    color: white;
     }
 
     .pagination .page-item.active .page-link {
-        background-color: #198754;
-        border-color: #198754;
-        color: white;
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
     }
 
     .navbar .navbar-nav .nav-link:hover,
     .navbar .navbar-nav .nav-link.active {
-        color: #198754 !important;
+    color: #198754 !important;
     }
-
-
     </style>
 
 
@@ -187,7 +185,8 @@
                 <li class="nav-item text-center">
 
                     <a
-                            class="nav-link text-light"
+                            class="nav-link"
+                            th:classappend="${activePage == 'home' ? 'active' : 'text-light'}"
                             th:href="@{/}">
 
                         Home
@@ -219,9 +218,9 @@
 
                     <a
                             class="nav-link text-light"
-                            href="#">
+                            th:href="@{/categories}">
 
-                        Category
+                        Categories
 
                     </a>
 

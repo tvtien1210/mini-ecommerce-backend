@@ -116,7 +116,19 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/login",
-                                "/register/**"
+                                "/register/**",
+                                "/products/**",
+                                "/categories/**"
+                        ).permitAll()
+
+                        // =========================================================
+                        // PUBLIC SWAGGER PAGE
+                        // =========================================================
+                        // Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
                         ).permitAll()
 
 
@@ -127,7 +139,9 @@ public class SecurityConfig {
                         // Những API không cần đăng nhập
                         .requestMatchers(
                                 "/api/auth/login",
-                                "/api/auth/register"
+                                "/api/auth/register",
+                                "/api/auth/refresh",
+                                "/api/auth/logout"
                         ).permitAll()
 
                         // API lấy thông tin user hiện tại
@@ -148,7 +162,7 @@ public class SecurityConfig {
                         // Static resources
                         .requestMatchers(
                                 "/images/**",
-                                "/css/*css*",
+                                "/css/**",
                                 "/js/**",
                                 "/favicon.ico"
                         ).permitAll()

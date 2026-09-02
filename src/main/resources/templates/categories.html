@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Categories - Chantaro Store</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom CSS -->
+    <link
+            rel="stylesheet"
+            th:href="@{/css/style.css}">
+
+    <style>
+
+        /* =========================
+           CATEGORY CARD
+           ========================= */
+
+        .category-card {
+            background-color: #212529;
+            border: 1px solid #343a40;
+            border-radius: 12px;
+            padding: 30px 20px;
+            height: 100%;
+
+            transition:
+                    transform 0.2s ease,
+                    border-color 0.2s ease,
+                    box-shadow 0.2s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            border-color: #198754;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .category-icon {
+            font-size: 45px;
+            color: #198754;
+            margin-bottom: 20px;
+        }
+
+        .category-name {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .category-description {
+            color: #adb5bd;
+            min-height: 48px;
+        }
+
+        .view-products-btn {
+            margin-top: 15px;
+        }
+
+
+        /* =========================
+           NAVBAR
+           ========================= */
+
+        .navbar .navbar-nav .nav-link:hover,
+        .navbar .navbar-nav .nav-link.active {
+            color: #198754 !important;
+        }
+
+    </style>
+
+</head>
+
+
+<body class="bg-dark text-light">
+
+
+<!-- ==============================
+     NAVBAR
+     ================================= -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-black">
+
+    <div class="container d-flex align-items-center">
+
+        <!-- Logo -->
+        <a
+                id="logoLink"
+                class="navbar-brand fw-bold fs-4"
+                th:href="@{/}">
+
+            <i class="bi bi-laptop-fill"></i>
+
+        </a>
+
+
+        <!-- Right side -->
+        <div
+                id="navbarRight"
+                class="d-flex align-items-center gap-3 ms-auto order-lg-2">
+
+
+            <!-- Account -->
+            <div id="userInfo">
+
+                <a
+                        id="loginLink"
+                        class="nav-link text-white"
+                        th:href="@{/login}">
+
+                    <i class="bi bi-person-circle"></i>
+
+                </a>
+
+            </div>
+
+
+            <!-- Admin menu -->
+            <div
+                    id="adminMenu"
+                    class="d-none">
+
+                <a
+                        id="adminLink"
+                        class="nav-link text-white"
+                        th:href="@{/admin}">
+
+                    <i class="bi bi-speedometer2"></i>
+
+                </a>
+
+            </div>
+
+
+            <!-- Cart -->
+            <a
+                    id="cartMenu"
+                    class="nav-link text-white"
+                    th:href="@{/cart}">
+
+                <i class="bi bi-cart3"></i>
+
+            </a>
+
+
+            <!-- Mobile menu button -->
+            <button
+                    id="navbarToggler"
+                    class="navbar-toggler border-0"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#nav"
+                    aria-controls="nav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+
+                <span class="navbar-toggler-icon"></span>
+
+            </button>
+
+        </div>
+
+
+        <!-- Navigation -->
+        <div
+                class="collapse navbar-collapse justify-content-center order-lg-1"
+                id="nav">
+
+
+            <ul
+                    id="mainNav"
+                    class="navbar-nav">
+
+
+                <!-- Home -->
+                <li class="nav-item text-center">
+
+                    <a
+                            id="homeLink"
+                            class="nav-link text-light"
+                            th:href="@{/}">
+
+                        Home
+
+                    </a>
+
+                </li>
+
+
+                <!-- Products -->
+                <li class="nav-item text-center">
+
+                    <a
+                            id="productsLink"
+                            class="nav-link text-light"
+                            th:href="@{/products}">
+
+                        Products
+
+                    </a>
+
+                </li>
+
+
+                <!-- Categories -->
+                <li class="nav-item text-center">
+
+                    <a
+                            id="categoriesLink"
+                            class="nav-link active"
+                            th:href="@{/categories}">
+
+                        Categories
+
+                    </a>
+
+                </li>
+
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =========================
+     CATEGORY CONTENT
+     ========================= -->
+
+<main>
+
+    <section
+            id="categoriesSection"
+            class="container py-5">
+
+
+        <!-- Page title -->
+        <div
+                id="categoryHeader"
+                class="text-center mb-5">
+
+            <h1
+                    id="categoryTitle"
+                    class="fw-bold">
+
+                Categories
+
+            </h1>
+
+            <p
+                    id="categorySubtitle"
+                    class="text-secondary">
+
+                Browse products by category
+
+            </p>
+
+        </div>
+
+
+        <!-- Loading state -->
+        <div
+                id="categoryLoading"
+                class="text-center py-5">
+
+            <div
+                    class="spinner-border text-success"
+                    role="status">
+
+                <span class="visually-hidden">
+                    Loading...
+                </span>
+
+            </div>
+
+            <p class="text-secondary mt-3">
+                Loading categories...
+            </p>
+
+        </div>
+
+
+        <!-- Category list -->
+        <div
+                id="categoryList"
+                class="row g-4 d-none">
+
+            <!--
+                categories.js will create category cards here.
+
+                Example:
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="category-card text-center">
+                        ...
+                    </div>
+                </div>
+            -->
+
+        </div>
+
+
+        <!-- Empty state -->
+        <div
+                id="categoryEmpty"
+                class="text-center py-5 d-none">
+
+            <i
+                    class="bi bi-folder-x fs-1 text-secondary">
+            </i>
+
+            <h4 class="mt-3">
+                No categories found
+            </h4>
+
+            <p class="text-secondary">
+                There are currently no product categories.
+            </p>
+
+        </div>
+
+
+        <!-- Error state -->
+        <div
+                id="categoryError"
+                class="text-center py-5 d-none">
+
+            <i
+                    class="bi bi-exclamation-triangle fs-1 text-warning">
+            </i>
+
+            <h4 class="mt-3">
+                Failed to load categories
+            </h4>
+
+            <p
+                    id="categoryErrorMessage"
+                    class="text-secondary">
+
+                Please try again later.
+
+            </p>
+
+            <button
+                    id="categoryRetryBtn"
+                    type="button"
+                    class="btn btn-success">
+
+                <i class="bi bi-arrow-clockwise"></i>
+
+                Retry
+
+            </button>
+
+        </div>
+
+
+    </section>
+
+</main>
+
+
+
+<!-- =========================
+     FOOTER
+     ========================= -->
+
+<footer
+        id="footer"
+        class="bg-black text-secondary py-4 mt-5">
+
+    <div class="container text-center">
+
+        <p class="mb-0">
+            © 2026 Chantaro Store. All rights reserved.
+        </p>
+
+    </div>
+
+</footer>
+
+
+
+<!-- Bootstrap JS -->
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<!-- Navbar JS -->
+<script
+        type="module"
+        src="/js/navbar.js">
+</script>
+
+
+<!-- Categories JS -->
+<script
+        type="module"
+        src="/js/categories.js">
+</script>
+
+
+</body>
+
+</html>

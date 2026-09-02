@@ -29,7 +29,7 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // auto increment
     @Setter(AccessLevel.NONE) // không cho set id thủ công
-    private Integer id;
+    private Long id;
 
     // ================== NAME ==================
     @NotBlank // không được null hoặc rỗng

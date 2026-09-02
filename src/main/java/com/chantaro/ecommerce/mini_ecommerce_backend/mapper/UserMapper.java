@@ -8,6 +8,7 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.UserDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Role;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.User;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,7 @@ public class UserMapper {
     // Dùng riêng cho /api/auth/me
     public static CurrentUserDTO toCurrentUserDTO(
             User user,
-            String expiresAt) {
+            LocalDateTime expiresAt) {
 
         Set<String> roles = user.getRoles()
                 .stream()

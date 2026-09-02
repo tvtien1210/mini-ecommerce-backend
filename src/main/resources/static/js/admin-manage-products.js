@@ -1,3 +1,5 @@
+import {apiFetch} from "./api.js";
+
 // DOM ELEMENTS
 
 // <tbody> dùng để render danh sách Product trên Desktop
@@ -122,7 +124,7 @@ async function loadProducts() {
 
     try {
 
-        const response = await fetch("/api/products");
+        const response = await apiFetch("/api/products");
 
         if (!response.ok) {
             console.error(
@@ -468,7 +470,7 @@ productFormElement.addEventListener("submit", async function(event) {
         // =========================
         if (!productId) {
 
-            response = await fetch("/api/products", {
+            response = await apiFetch("/api/products", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -476,7 +478,21 @@ productFormElement.addEventListener("submit", async function(event) {
                 body: JSON.stringify([productData])
             });
 
+        // CHECK RESPONSE
+
+        if (!response.ok) {
+
+            console.error(
+                "Request failed:",
+                response.status,
+                response.statusText
+            );
+
             showToast("Product added successfully.", "success");
+            return;
+        }
+
+
 
         }
 
@@ -485,7 +501,7 @@ productFormElement.addEventListener("submit", async function(event) {
         // =========================
         else {
 
-            response = await fetch(`/api/products/${productId}`, {
+            response = await apiFetch(`/api/products/${productId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
@@ -523,7 +539,7 @@ productFormElement.addEventListener("submit", async function(event) {
         // =========================
 
         const modal =
-            bootstrap.Modal.getOrCreateInstance(productModal);
+            bootstrap.Modal.getOrCreateInstance(productModalElement);
 
         modal.hide();
 
@@ -668,7 +684,7 @@ async function confirmDelete() {
     try {
 
         // Gửi DELETE request đến Backend
-        const response = await fetch(
+        const response = await apiFetch(
             `/api/products/${deleteProductId}`,
             {
                 method: "DELETE"
@@ -694,7 +710,7 @@ async function confirmDelete() {
 
 
         // DELETE thành công
-        showToast("Product deleted successfully","danger")
+        showToast("Product deleted successfully","success")
 
         //Dong Delete Modal
 

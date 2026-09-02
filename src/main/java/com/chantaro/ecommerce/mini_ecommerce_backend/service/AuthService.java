@@ -20,11 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.WebUtils;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Service
@@ -85,11 +82,22 @@ public class AuthService {
 
     public CurrentUserDTO getCurrentUser(HttpServletRequest request) {
 
+        // Lấy Authentication mà JwtFilter đã tạo
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
+        // Kiểm tra user đã đăng nhập chưa
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Lấy username từ Authentication
         String username = authentication.getName();
 
+        // Tìm user trong database
         User user = userRepository.findByUsername(username)
                 .orElseThrow(
                         () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
@@ -99,23 +107,19 @@ public class AuthService {
         Cookie cookie = WebUtils.getCookie(request, "accessToken");
 
         // Biến lưu thời gian JWT hết hạn
-        String expiresAt = null;
+        LocalDateTime expiresAt = null;
 
         if (cookie != null) {
 
             // Lấy thời gian hết hạn từ JWT
+            //extractExpiration(cookie.getValue()); tra ve kieu du lieu Date
             Date expiration = jwtService.extractExpiration(cookie.getValue());
-
-            // Chuyển sang giờ Nhật Bản
-            LocalDateTime dateTime = expiration.toInstant()
-                    .atZone(ZoneId.of("Asia/Tokyo"))
-                    .toLocalDateTime();
-
-            // Format thành yyyy-MM-dd HH:mm:ss
-            expiresAt = dateTime.format(
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            );
+            //Convert expiration vua lay duoc tu token trong cookie sang LocalDateTime
+            expiresAt = expiration.toInstant().atZone(ZoneId.of("Asia/Tokyo")).toLocalDateTime();
         }
+
+        System.out.println("Check expires at ------" + expiresAt);
+
         return UserMapper.toCurrentUserDTO(user, expiresAt);
     }
 }

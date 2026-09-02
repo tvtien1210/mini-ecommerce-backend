@@ -42,7 +42,7 @@ public class JwtService {
 
                 // set thời gian hết hạn (15 phút)
                 // nếu quá hạn → token không dùng được
-                .setExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000))
+                .setExpiration(new Date(System.currentTimeMillis() + 1 * 60 * 1000))
 
                 // ký token bằng thuật toán HS256 + SECRET
                 // nếu SECRET sai → token invalid

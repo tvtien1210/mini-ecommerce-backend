@@ -18,32 +18,35 @@ import java.util.List;
 public class ProductViewController {
     private final ProductService productService;
 
-
     @GetMapping("/products")
     public String showProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model
     ) {
-        //---PRODUCT AUTO BIND BASED ON DATABASE
-        List<ProductDTO> products = productService.getAllProducts();
-        model.addAttribute("products", products);
 
-
-        //---PAGINATION
-        //lay tat ca san pham va chi thanh trang, moi trang co size = 10 san pham
+        //--- PAGINATION
+        // Lấy danh sách sản phẩm theo từng trang.
+        // Ví dụ: tổng cộng 25 sản phẩm, mỗi trang hiển thị 10 sản phẩm.
         Page<Product> productPage = productService.getProducts(page, size);
 
-        //lay rieng danh sach cua trang hien tai, vi du lay 25 san pham size = 10
+        // Lấy danh sách sản phẩm của riêng trang hiện tại.
+        // Ví dụ: trang 1 sẽ lấy sản phẩm 1-10,
+        // trang 2 lấy sản phẩm 11-20,
+        // trang 3 lấy sản phẩm 21-25.
         model.addAttribute("products", productPage.getContent());
 
-        //lay rieng trang hien tai la trang 1 hay trang 2
+        // Lấy số thứ tự của trang hiện tại.
+        // Ví dụ: page = 0 là trang đầu tiên, page = 1 là trang thứ hai.
         model.addAttribute("currentPage", page);
 
-        //lay tong so trang can hien thi, vi du 25 may /10 may moi trang = 2,5 (la 3 trang)
+        // Lấy tổng số trang cần hiển thị.
+        // Ví dụ: 25 sản phẩm / 10 sản phẩm mỗi trang = 2,5
+        // => cần 3 trang.
         model.addAttribute("totalPages", productPage.getTotalPages());
 
-        //lay du lieu tong so may hien thi ra ngoai man hinh
+        // Lấy tổng số sản phẩm trong database.
+        // Ví dụ: database có 25 sản phẩm => totalProducts = 25.
         model.addAttribute("totalProducts", productPage.getTotalElements());
 
         //---ACTIVE PAGE

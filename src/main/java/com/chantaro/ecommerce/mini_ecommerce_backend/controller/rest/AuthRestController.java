@@ -3,7 +3,6 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.login.LoginRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.auth.register.CreateRegisterRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.CurrentUserDTO;
-import com.chantaro.ecommerce.mini_ecommerce_backend.dto.user.UserDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.UserRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.service.CustomUserDetailsService;
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtService;
@@ -117,10 +116,13 @@ public class AuthRestController {
         // Sau khi login thành công, browser sẽ nhận và lưu cookie "accessToken".
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
+
         //Buoc 3: tao token
         return Map.of(
                 "username", username,
-                "roles", roles
+                "roles", roles,
+                "accessToken",accessToken,
+                "refreshToken",refreshToken
         );
 
 

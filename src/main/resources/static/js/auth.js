@@ -1,3 +1,5 @@
+import { apiFetch } from "./api.js";
+
 // GET CURRENT USER
 
 // Gọi API /api/auth/me để lấy thông tin người dùng hiện tại
@@ -9,14 +11,10 @@ export async function getCurrentUser() {
     try {
 
         // Gửi GET request tới API /api/auth/me
-        const response = await fetch("/api/auth/me", {
-
+        const response = await apiFetch("/api/auth/me", {
             // HTTP method là GET
             method: "GET",
-
-            // Cho phép browser gửi Cookie kèm request
-            // Vì accessToken đang được lưu trong HttpOnly Cookie
-            credentials: "include"
+            // Khong can credentials : "include" khong can , vi trong apiFetch da co san
         });
 
 

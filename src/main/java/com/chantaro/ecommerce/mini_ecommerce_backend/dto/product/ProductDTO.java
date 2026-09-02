@@ -19,7 +19,7 @@ public class ProductDTO {
     private CurrencyCode currency;
     private Integer stock;
     private String imageUrl;
-    private Integer categoryId;
+    private Long categoryId;
     private String categoryName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
