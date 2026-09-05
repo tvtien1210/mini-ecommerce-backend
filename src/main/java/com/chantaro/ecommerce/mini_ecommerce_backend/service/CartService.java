@@ -77,6 +77,7 @@ public class CartService {
                     .user(user)
                     .status(CartStatusCode.ACTIVE)
                     .totalPrice(BigDecimal.ZERO)
+                    .currency(CurrencyCode.VND)
                     .build();
 
             // DB保存（永続化）

@@ -103,7 +103,7 @@ public class AuthService {
                         () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
                 );
 
-        // Lấy Cookie accessToken từ request
+        // Lấy Cookie accessToken từ request de goi expriesAt
         Cookie cookie = WebUtils.getCookie(request, "accessToken");
 
         // Biến lưu thời gian JWT hết hạn
@@ -118,9 +118,7 @@ public class AuthService {
             expiresAt = expiration.toInstant().atZone(ZoneId.of("Asia/Tokyo")).toLocalDateTime();
         }
 
-        System.out.println("Check expires at ------" + expiresAt);
-
-        return UserMapper.toCurrentUserDTO(user, expiresAt);
+        return UserMapper.toDTO(user, expiresAt);
     }
 }
 

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<!-- ==================================================
+     TOAST FRAGMENT
+     ================================================== -->
+
+<div th:fragment="toast"
+     class="position-fixed
+            start-50
+            top-50
+            translate-middle"
+     style="z-index: 1080;">
+
+  <div id="toast"
+       class="toast
+                text-white
+                border
+                border-secondary"
+       role="alert"
+       aria-live="assertive"
+       aria-atomic="true">
+
+    <div id="toastMessage"
+         class="toast-body">
+
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+
+</html>

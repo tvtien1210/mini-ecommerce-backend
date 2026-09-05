@@ -5,6 +5,7 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.security.config;
 import com.chantaro.ecommerce.mini_ecommerce_backend.security.jwt.JwtFilter;
 
 // ===== Import Spring =====
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -118,7 +119,8 @@ public class SecurityConfig {
                                 "/login",
                                 "/register/**",
                                 "/products/**",
-                                "/categories/**"
+                                "/categories/**",
+                                "/cart"
                         ).permitAll()
 
                         // =========================================================
@@ -339,29 +341,70 @@ public class SecurityConfig {
                         // All remaining endpoints require authentication
                         .anyRequest()
                         .authenticated()
+
+
                 )
 
-                // ===== JWT FILTER =====
-                // Request đi qua JWT trước
-                // Nếu token hợp lệ:
-                // SecurityContext sẽ có Authentication
 
 
-                // ===== ĐĂNG KÝ PROVIDER =====
-                // dùng DaoAuthenticationProvider của mình
-                // khi login sẽ:
-                //    -gọi UserDetailsService
-                //    -lấy user từ DB
-                //    -check password bằng BCrypt
+                // =========================================================
+                // EXCEPTION HANDLING
+                // =========================================================
+                //
+                // Chưa đăng nhập
+                //      ↓
+                // AuthenticationEntryPoint
+                //      ↓
+                // HTTP 401
+                //
+                // Đã đăng nhập nhưng không đủ ROLE
+                //      ↓
+                // HTTP 403
+                // =========================================================
+
+                .exceptionHandling(exception -> exception
+
+                        .authenticationEntryPoint(
+                                (request, response, authException) -> {
+
+                                    response.setStatus(
+                                            HttpServletResponse.SC_UNAUTHORIZED
+                                    );
+
+                                    response.setContentType(
+                                            "application/json"
+                                    );
+
+                                    response.getWriter().write("""
+                                    {
+                                        "code": 401,
+                                        "message": "UNAUTHENTICATED"
+                                    }
+                                    """);
+                                }
+                        )
+                )
 
 
-                // ===== JWT FILTER =====
-                // Thêm filter trước UsernamePasswordAuthenticationFilter
-                // → nghĩa là:
-                // request sẽ đi qua JWT trước
-                // nếu có token hợp lệ → cho qua luôn
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // =========================================================
+                // JWT FILTER
+                // =========================================================
+                //
+                // Request
+                //    ↓
+                // JwtFilter
+                //    ↓
+                // JWT hợp lệ?
+                //    ↓
+                // SecurityContext có Authentication
+                //    ↓
+                // Authorization
+                // =========================================================
 
+                .addFilterBefore(
+                        jwtFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
         return http.build();
     }
 }

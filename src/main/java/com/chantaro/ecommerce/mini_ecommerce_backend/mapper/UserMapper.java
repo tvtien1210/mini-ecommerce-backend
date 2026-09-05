@@ -47,7 +47,7 @@ public class UserMapper {
 
 
     // Dùng riêng cho /api/auth/me
-    public static CurrentUserDTO toCurrentUserDTO(
+    public static CurrentUserDTO toDTO(
             User user,
             LocalDateTime expiresAt) {
 

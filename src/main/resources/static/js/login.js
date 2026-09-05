@@ -37,9 +37,9 @@ loginFormElement.addEventListener("submit", async function(e){
 
     })
 
-
     const loginErrorElement = document.getElementById("loginError");
     const loginErrorMessageElement = document.getElementById("loginErrorMessage");
+
     //Kiểm tra HTTP status code
     if(!response.ok){
     loginErrorMessageElement.innerText=`Error: Username or password incorrect`;
@@ -53,3 +53,15 @@ loginFormElement.addEventListener("submit", async function(e){
     window.location.href="/";
 });
 
+
+// TỰ ĐỘNG ĐIỀN USER PASSWORD KHI LOGIN DEMO
+
+function useDemoAccount(username, password) {
+
+    // Điền username vào form
+    document.getElementById("username").value = username;
+
+    // Điền password vào form
+    document.getElementById("password").value = password;
+
+}

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-black"
+     th:fragment="navbar">
+
+  <div class="container d-flex align-items-center">
+
+    <!-- Logo -->
+    <a class="navbar-brand fw-bold fs-4"
+       th:href="@{/}">
+
+      <i class="bi bi-laptop-fill"></i>
+
+    </a>
+
+
+    <!-- Right side -->
+    <div class="d-flex align-items-center gap-3 ms-auto order-lg-2">
+
+      <!-- Account -->
+      <div id="userInfo">
+
+        <a class="nav-link text-white"
+           th:href="@{/login}">
+
+          <i class="bi bi-person-circle"></i>
+
+        </a>
+
+      </div>
+
+
+      <!-- Admin -->
+      <div id="adminMenu"
+           class="d-none">
+
+        <a class="nav-link text-white"
+           th:href="@{/admin}">
+
+          <i class="bi bi-speedometer2"></i>
+
+        </a>
+
+      </div>
+
+
+      <!-- Cart -->
+      <a href="/cart" class="nav-link position-relative">
+
+        <!-- Card Icon -->
+        <i class="bi bi-cart3"></i>
+
+        <!-- Cart Badge -->
+        <span
+                id="cartBadge"
+                class="position-absolute translate-middle
+               badge rounded-pill bg-danger"
+                style="font-size: 0.65rem;">
+
+        0
+
+    </span>
+
+      </a>
+
+
+      <!-- Mobile menu button -->
+      <button
+              class="navbar-toggler border-0"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#nav"
+              aria-controls="nav"
+              aria-expanded="false"
+              aria-label="Toggle navigation">
+
+        <span class="navbar-toggler-icon"></span>
+
+      </button>
+
+    </div>
+
+
+    <!-- Navigation -->
+    <div
+            class="collapse navbar-collapse justify-content-center order-lg-1"
+            id="nav">
+
+      <ul class="navbar-nav">
+
+        <!-- Home -->
+        <li class="nav-item text-center">
+
+          <a
+                  class="nav-link"
+                  th:classappend="${activePage == 'home' ? 'active' : 'text-light'}"
+                  th:href="@{/}">
+
+            Home
+
+          </a>
+
+        </li>
+
+
+        <!-- Products -->
+        <li class="nav-item text-center">
+
+          <a
+                  class="nav-link"
+                  th:classappend="${activePage == 'products' ? 'active' : 'text-light'}"
+                  th:href="@{/products}">
+
+            Products
+
+          </a>
+
+        </li>
+
+
+        <!-- Categories -->
+        <li class="nav-item text-center">
+
+          <a
+                  class="nav-link"
+                  th:classappend="${activePage == 'categories' ? 'active' : 'text-light'}"
+                  th:href="@{/categories}">
+
+            Categories
+
+          </a>
+
+        </li>
+
+      </ul>
+
+    </div>
+
+  </div>
+
+</nav>
+
+</body>
+</html>

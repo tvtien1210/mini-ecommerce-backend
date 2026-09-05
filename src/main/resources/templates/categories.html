@@ -72,15 +72,11 @@
             margin-top: 15px;
         }
 
-
-        /* =========================
-           NAVBAR
-           ========================= */
-
         .navbar .navbar-nav .nav-link:hover,
         .navbar .navbar-nav .nav-link.active {
             color: #198754 !important;
         }
+
 
     </style>
 
@@ -90,161 +86,15 @@
 <body class="bg-dark text-light">
 
 
-<!-- ==============================
+<!-- =========================
      NAVBAR
-     ================================= -->
+========================== -->
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-black">
-
-    <div class="container d-flex align-items-center">
-
-        <!-- Logo -->
-        <a
-                id="logoLink"
-                class="navbar-brand fw-bold fs-4"
-                th:href="@{/}">
-
-            <i class="bi bi-laptop-fill"></i>
-
-        </a>
-
-
-        <!-- Right side -->
-        <div
-                id="navbarRight"
-                class="d-flex align-items-center gap-3 ms-auto order-lg-2">
-
-
-            <!-- Account -->
-            <div id="userInfo">
-
-                <a
-                        id="loginLink"
-                        class="nav-link text-white"
-                        th:href="@{/login}">
-
-                    <i class="bi bi-person-circle"></i>
-
-                </a>
-
-            </div>
-
-
-            <!-- Admin menu -->
-            <div
-                    id="adminMenu"
-                    class="d-none">
-
-                <a
-                        id="adminLink"
-                        class="nav-link text-white"
-                        th:href="@{/admin}">
-
-                    <i class="bi bi-speedometer2"></i>
-
-                </a>
-
-            </div>
-
-
-            <!-- Cart -->
-            <a
-                    id="cartMenu"
-                    class="nav-link text-white"
-                    th:href="@{/cart}">
-
-                <i class="bi bi-cart3"></i>
-
-            </a>
-
-
-            <!-- Mobile menu button -->
-            <button
-                    id="navbarToggler"
-                    class="navbar-toggler border-0"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#nav"
-                    aria-controls="nav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation">
-
-                <span class="navbar-toggler-icon"></span>
-
-            </button>
-
-        </div>
-
-
-        <!-- Navigation -->
-        <div
-                class="collapse navbar-collapse justify-content-center order-lg-1"
-                id="nav">
-
-
-            <ul
-                    id="mainNav"
-                    class="navbar-nav">
-
-
-                <!-- Home -->
-                <li class="nav-item text-center">
-
-                    <a
-                            id="homeLink"
-                            class="nav-link text-light"
-                            th:href="@{/}">
-
-                        Home
-
-                    </a>
-
-                </li>
-
-
-                <!-- Products -->
-                <li class="nav-item text-center">
-
-                    <a
-                            id="productsLink"
-                            class="nav-link text-light"
-                            th:href="@{/products}">
-
-                        Products
-
-                    </a>
-
-                </li>
-
-
-                <!-- Categories -->
-                <li class="nav-item text-center">
-
-                    <a
-                            id="categoriesLink"
-                            class="nav-link active"
-                            th:href="@{/categories}">
-
-                        Categories
-
-                    </a>
-
-                </li>
-
-
-            </ul>
-
-        </div>
-
-    </div>
-
-</nav>
-
-
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- =========================
-     CATEGORY CONTENT
-     ========================= -->
+ CATEGORY CONTENT
+ ========================= -->
 
 <main>
 
@@ -379,7 +229,6 @@
 </main>
 
 
-
 <!-- =========================
      FOOTER
      ========================= -->
@@ -399,7 +248,6 @@
 </footer>
 
 
-
 <!-- Bootstrap JS -->
 <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
@@ -408,14 +256,16 @@
 
 <!-- Navbar JS -->
 <script
-        type="module"
+        src="/js/common.js">
+</script>
+
+<script
         src="/js/navbar.js">
 </script>
 
 
 <!-- Categories JS -->
 <script
-        type="module"
         src="/js/categories.js">
 </script>
 

@@ -16,6 +16,7 @@ public class HomeController {
 
     @GetMapping("/cart")
     public String cart() {
+
         return "cart";
     }
 

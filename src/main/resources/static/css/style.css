@@ -10,10 +10,17 @@ background:#000;
 border-bottom:1px solid #222;
 }
 
+/* navbar active when click page */
+
+.navbar .navbar-nav .nav-link:hover,
+.navbar .navbar-nav .nav-link.active {
+    color: #198754 !important;
+}
+
 /* hero */
 
 .hero{
-padding:120px 20px;
+padding:50px 20px;
 text-align:center;
 background:linear-gradient(#111,#000);
 }

@@ -120,9 +120,11 @@ public class AuthRestController {
         //Buoc 3: tao token
         return Map.of(
                 "username", username,
-                "roles", roles,
-                "accessToken",accessToken,
-                "refreshToken",refreshToken
+                "roles", roles
+
+                //Check data
+//                "accessToken",accessToken,
+//                "refreshToken",refreshToken
         );
 
 

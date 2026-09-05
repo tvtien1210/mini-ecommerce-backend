@@ -115,154 +115,345 @@ public class OrderService {
     // processStock側で管理
     public CheckoutDTO checkoutOrder(HttpServletRequest request) {
 
-        // ===============================
-        // 1. Lấy user hiện tại
-        // ===============================
-        // 現在ログインユーザー取得
+        // ============================================================
+        // 1. GET CURRENT LOGGED-IN USER
+        //    現在ログインユーザー取得
+        // ============================================================
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // ===============================
-        // 2. Lấy cart ACTIVE
-        // ===============================
-        // 有効カート取得
 
-        Cart cart = cartRepository.findByUserAndStatus(user, CartStatusCode.ACTIVE)
+        // ============================================================
+        // 2. GET ACTIVE CART
+        //    有効カート取得
+        // ============================================================
+
+        Cart cart = cartRepository.findByUserAndStatus(
+                        user,
+                        CartStatusCode.ACTIVE
+                )
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_NOT_FOUND));
 
 
-        //Dùng orElseThrow() khi tôi chắc chắn phải tồn tại ví dụ findbyId(id) or name, nếu không có system coi như bỏ, không logic trả exception kết thúc luôn
-        //Dùng orElse(null) hoặc isPresent() khi tôi chỉ muốn kiểm tra xem dữ liệu có tồn tại hay không.
-        Order pendingOrder = orderRepository.findByUserAndStatus(user, OrderStatusCode.PENDING)
+        // ============================================================
+        // 3. CHECK EXISTING PENDING ORDER
+        //    既存のPENDING注文確認
+        //
+        //    目的:
+        //    - User chỉ được xử lý 1 Order PENDING tại một thời điểm
+        //    - Nếu đã có Order PENDING thì không tạo Order mới
+        //    - Kiểm tra Payment PENDING của Order đó
+        // ============================================================
+
+        Order pendingOrder = orderRepository
+                .findByUserAndStatus(user, OrderStatusCode.PENDING)
                 .orElse(null);
 
-        //Trường hợp 1: Có Order PENDING:
+        // ------------------------------------------------------------
+        // 3.1. CASE: PENDING ORDER EXISTS
+        //      PENDING注文が存在する場合
+        // ------------------------------------------------------------
 
         if (pendingOrder != null) {
-            Payment pendingPayment = paymentRepository.findFirstByOrderAndStatusOrderByCreatedAtDesc(pendingOrder, PaymentStatusCode.PENDING)
-                    //Không thấy Payment nào đang PENDING -> ném luôn ngoại lệ -> dừng luôn
-                    .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
-            //Có Order PENDING
-            //1. Payment còn hạn
-            //if (pendingPayment != null && pendingPayment.getExpiredAt().isAfter(LocalDateTime.now())) : bỏ dòng pendingPayment != null vì
-            //lúc này pendingPayment chắc chắn khác null do có orElseThrow ở trên rồi
-            if (pendingPayment.getExpiredAt().isAfter(LocalDateTime.now())) {
-                String paymentUrl = vnPayUtil.buildPaymentUrl(pendingPayment.getAmount(), pendingPayment.getTxnRef(), request);
-                return CheckoutMapper.toDTO(pendingOrder, PaymentMapper.toDTO(pendingPayment, paymentUrl));
+            // Tìm Payment PENDING mới nhất của Order
+            // Paymentが存在しない場合は処理を中断
+            Payment pendingPayment = paymentRepository
+                    .findFirstByOrderAndStatusOrderByCreatedAtDesc(
+                            pendingOrder,
+                            PaymentStatusCode.PENDING
+                    )
+                    .orElseThrow(() -> new BusinessException(
+                            ErrorCode.PAYMENT_NOT_FOUND
+                    ));
+
+
+            // --------------------------------------------------------
+            // 3.1.1. PAYMENT STILL VALID
+            //       支払い有効期限内
+            //
+            //       Payment chắc chắn != null vì đã dùng orElseThrow()
+            // --------------------------------------------------------
+
+            LocalDateTime now = LocalDateTime.now();
+
+            //expiredAt >= now → còn hạn
+
+            if (pendingPayment.getExpiredAt().isAfter(now)
+                    || pendingPayment.getExpiredAt().isEqual(now)) {
+
+                // Payment vẫn còn hạn
+                String paymentUrl = vnPayUtil.buildPaymentUrl(
+                        pendingPayment.getAmount(),
+                        pendingPayment.getTxnRef(),
+                        request
+                );
+
+                return CheckoutMapper.toDTO(
+                        pendingOrder,
+                        PaymentMapper.toDTO(
+                                pendingPayment,
+                                paymentUrl
+                        )
+                );
             }
 
-            //2. Payment hết hạn
-            if (pendingPayment.getExpiredAt().isBefore(LocalDateTime.now())) {
-                //Thay đổi status Payment sang FAILED hết hạn, lỗi không thể dùng link VNPay đã tạo để thanh toán nữa
+
+            // --------------------------------------------------------
+            // 3.1.2. PAYMENT EXPIRED
+            //       支払い有効期限切れ
+            //
+            //       Payment cũ không thể tiếp tục sử dụng
+            //       → FAILED
+            //       → Tạo Payment mới
+            // --------------------------------------------------------
+
+            //expiredAt < now → hết hạn
+
+            if (pendingPayment.getExpiredAt().isBefore(now)) {
+
+                // Đánh dấu Payment cũ đã hết hạn
+                // 期限切れPaymentをFAILEDに変更
                 pendingPayment.setStatus(PaymentStatusCode.FAILED);
-                //Cập nhật vào database
+
+                // Lưu trạng thái Payment mới vào database
                 paymentRepository.save(pendingPayment);
 
-                //Tạo link VNpay mới với dữ liệu cũ
-                PaymentDTO paymentDTO = paymentService.createPaymentUrl(pendingOrder.getId(), request);
-                return CheckoutMapper.toDTO(pendingOrder, paymentDTO);
+                // Tạo Payment mới cho Order PENDING hiện tại
+                // 新しいPaymentを作成
+                PaymentDTO paymentDTO = paymentService.createPaymentUrl(
+                        pendingOrder.getId(),
+                        request
+                );
+
+                return CheckoutMapper.toDTO(
+                        pendingOrder,
+                        paymentDTO
+                );
             }
         }
 
-        //Trường hợp 2: Không có Order PENDING:
 
-        // ===============================
-        // 3. Validate cart
-        // ===============================
-        // カートバリデーション
+        // ============================================================
+        // 4. VALIDATE CART
+        //    カートバリデーション
+        //
+        //    CASE:
+        //    Không có PENDING Order
+        //    → Có thể bắt đầu tạo Order mới
+        // ============================================================
 
-        // cart.getItems().isEmpty() → throw
-        // 空カート禁止
-
-        // chặn không cho check out nếu Cart vẫn: status = ACTIVE, nhưng cartItems = []
-        // 商品未存在チェック
+        // Không cho phép checkout Cart rỗng
+        // 空カートでのCheckoutを禁止
         if (cart.getCartItems().isEmpty()) {
+
             throw new BusinessException(ErrorCode.CART_EMPTY);
         }
 
 
-        // ===============================
-        // 4. Tạo Order : CHECK OUT ORDER 🍺
-        // ===============================
-        // 注文生成
+        // ============================================================
+        // 5. CREATE ORDER
+        //    注文生成
+        // ============================================================
 
         Order order = new Order();
 
 
+        // ------------------------------------------------------------
+        // 5.1. SET ORDER USER
+        //      注文ユーザー設定
+        // ------------------------------------------------------------
+
         order.setUser(user);
 
-        //Tạo cart_id trong order table, để xác định order_id <-> cart_id tham chiếu chính xác với nhau
-        //khi xoá sản phẩm -> check out sp nào thì chỉ xoá sp đã check out đó
+
+        // ------------------------------------------------------------
+        // 5.2. LINK ORDER WITH CART
+        //      OrderとCartを関連付け
+        //
+        //      Order.cart_id
+        //      → このOrderがどのCartから作られたかを記録
+        //
+        //      Sau này có thể xác định chính xác:
+        //      Order <-> Cart <-> CartItem
+        // ------------------------------------------------------------
+
         order.setCart(cart);
 
-        // Set status = PENDING
-        // 初期ステータス設定
+
+        // ------------------------------------------------------------
+        // 5.3. SET INITIAL ORDER STATUS
+        //      注文初期ステータス設定
+        // ------------------------------------------------------------
+
         order.setStatus(OrderStatusCode.PENDING);
 
-        // ===============================
-        // 5. Loop cart items
-        // ===============================
-        // カート商品ループ
+
+        // ============================================================
+        // 6. CREATE ORDER ITEMS FROM CART ITEMS
+        //    カート商品から注文商品を生成
+        //
+        //    Mỗi CartItem
+        //    → tạo một OrderItem
+        // ============================================================
 
         for (CartItem cartItem : cart.getCartItems()) {
 
-            // 5.1 Lấy product
-            // 商品取得
+
+            // --------------------------------------------------------
+            // 6.1. GET PRODUCT
+            //      商品取得
+            // --------------------------------------------------------
+
             Product product = cartItem.getProduct();
 
-            // 5.4 Tạo OrderItem
-            // 注文商品生成
+
+            // --------------------------------------------------------
+            // 6.2. CREATE ORDER ITEM
+            //      注文商品生成
+            // --------------------------------------------------------
+
             OrderItem orderItem = new OrderItem();
 
-            // set product
-            // 商品設定
+
+            // --------------------------------------------------------
+            // 6.3. SET PRODUCT
+            //      商品設定
+            // --------------------------------------------------------
+
             orderItem.setProduct(product);
 
-            // set name
+
+            // --------------------------------------------------------
+            // 6.4. SNAPSHOT PRODUCT NAME
+            //      商品名をスナップショット保存
+            //
+            //      Lưu tên sản phẩm tại thời điểm checkout
+            // --------------------------------------------------------
+
             orderItem.setProductName(product.getName());
 
-            // set quantity
-            // 数量設定
+
+            // --------------------------------------------------------
+            // 6.5. SET QUANTITY
+            //      数量設定
+            // --------------------------------------------------------
+
             orderItem.setQuantity(cartItem.getQuantity());
 
-            // ⚠️ SNAPSHOT PRICE
-            // スナップショット価格保存
-            orderItem.setPrice(product.getPrice()); // đây là giá snapshot thời điểm đặt hàng cart.getProduct(), theo code tạo object này  Product product = cartItem.getProduct();
+
+            // --------------------------------------------------------
+            // 6.6. SNAPSHOT PRODUCT PRICE
+            //      商品価格をスナップショット保存
+            //
+            //      Lưu giá tại thời điểm tạo Order.
+            //
+            //      product.getPrice()
+            //      → giá hiện tại của Product
+            //
+            //      OrderItem.price
+            //      → giá snapshot của Order
+            //
+            //      Nếu sau này Product thay đổi giá,
+            //      Order cũ vẫn giữ nguyên giá đã mua.
+            // --------------------------------------------------------
+
+            orderItem.setPrice(product.getPrice());
 
 
-            // Lưu lại cart_item gốc(order nào quản lý cart đó)
+            // --------------------------------------------------------
+            // 6.7. SAVE ORIGINAL CART ITEM ID
+            //      元のCartItem IDを保存
+            //
+            //      Dùng để xác định:
+            //      OrderItem này được tạo từ CartItem nào.
+            // --------------------------------------------------------
+
             orderItem.setCartItemId(cartItem.getId());
 
 
-            // add list orderItem vừa tìm được vào order
-            // 注文へ商品追加
-            // order.getItems().add(item);
+            // --------------------------------------------------------
+            // 6.8. ADD ORDER ITEM TO ORDER
+            //      注文へ商品追加
+            // --------------------------------------------------------
+
             order.addItem(orderItem);
         }
 
-        //Trong processStockWithRetry đã có xử lý reserverStock
+
+        // ============================================================
+        // 7. RESERVE STOCK
+        //    在庫予約
+        //
+        //    processStockWithRetry() bên trong đã xử lý:
+        //
+        //    availableStock = stock - reservedStock
+        //
+        //    Nếu đủ:
+        //    → reservedStock tăng
+        //
+        //    Nếu không đủ:
+        //    → throw exception
+        // ============================================================
+
         stockRetryService.reserveStockWithRetry(order);
 
-        // ===============================
-        // 7. Save order vào db
-        // ===============================
-        // 注文保存
+
+        // ============================================================
+        // 8. SAVE ORDER
+        //    注文保存
+        //
+        //    Lúc này Order đã có:
+        //    - User
+        //    - Cart
+        //    - Status = PENDING
+        //    - OrderItems
+        //    - Product snapshot
+        //    - Quantity
+        //    - Price snapshot
+        // ============================================================
+
         Order saveOrder = orderRepository.save(order);
 
 
-        //Tạo Payment - Status Pending
-        PaymentDTO paymentDTO = paymentService.createPaymentUrl(saveOrder.getId(), request);
+        // ============================================================
+        // 9. CREATE PAYMENT
+        //    支払い生成
+        //
+        //    Tạo Payment:
+        //    - Order ID
+        //    - Amount
+        //    - TxnRef
+        //    - Status = PENDING
+        //    - ExpiredAt
+        //    - VNPay payment URL
+        // ============================================================
+
+        PaymentDTO paymentDTO = paymentService.createPaymentUrl(
+                saveOrder.getId(),
+                request
+        );
 
 
-        // ===============================
-        // 9. Return DTO
-        // ===============================
-        // DTO返却
-        return CheckoutMapper.toDTO(saveOrder, paymentDTO);
+        // ============================================================
+        // 10. RETURN CHECKOUT DTO
+        //     Checkout結果返却
+        //
+        //     Response gồm:
+        //     - Order information
+        //     - Payment information
+        //     - VNPay payment URL
+        // ============================================================
+
+        return CheckoutMapper.toDTO(
+                saveOrder,
+                paymentDTO
+        );
     }
 
 

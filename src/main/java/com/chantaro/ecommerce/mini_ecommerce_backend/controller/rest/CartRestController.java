@@ -36,9 +36,8 @@ public class CartRestController {
     }
 
     @DeleteMapping("/items/{id}")
-    public String deleteCartItem(@PathVariable Long id){
+    public void deleteCartItem(@PathVariable Long id){
         cartService.deleteCartItem(id);
-        return "Deleted item with id = " + id;
     }
 
 }

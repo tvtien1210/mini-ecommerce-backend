@@ -14,146 +14,25 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/home.css">
+
 
     <!-- Bootstrap Icons -->
     <link
             rel="stylesheet"
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-    <style>
 
-    .navbar .navbar-nav .nav-link:hover,
-    .navbar .navbar-nav .nav-link.active {
-        color: #198754 !important;
-    }
 
-    </style>
+
 </head>
-
 <body>
 
-<!-- ==============================
+<!-- =========================
      NAVBAR
-================================== -->
+========================== -->
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-black">
-
-    <div class="container d-flex align-items-center">
-
-        <!-- Logo -->
-        <a class="navbar-brand fw-bold fs-4" th:href="@{/}">
-            <i class="bi bi-laptop-fill"></i>
-        </a>
-
-        <!-- Right side -->
-        <div class="d-flex align-items-center gap-3 ms-auto order-lg-2">
-
-            <!-- Account -->
-            <div id="userInfo">
-                <a class="nav-link text-white" th:href="@{/login}">
-                    <i class="bi bi-person-circle"></i>
-                </a>
-            </div>
-
-            <div id="adminMenu" class="d-none">
-                <a class="nav-link text-white" th:href="@{/admin}">
-                    <i class="bi bi-speedometer2"></i>
-                </a>
-            </div>
-
-
-            <!-- Cart -->
-            <a id = "cartMenu" class="nav-link text-white" th:href="@{/cart}">
-                <i class="bi bi-cart3"></i>
-            </a>
-
-            <!-- Mobile menu button -->
-            <button
-                    class="navbar-toggler border-0"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#nav"
-                    aria-controls="nav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation">
-
-                <span class="navbar-toggler-icon"></span>
-
-            </button>
-
-        </div>
-
-
-        <!-- Navigation -->
-
-        <div
-                class="collapse
-                       navbar-collapse
-                       justify-content-center
-                       order-lg-1"
-                id="nav">
-
-
-            <ul class="navbar-nav">
-
-
-                <!-- Home -->
-
-                <li class="nav-item text-center">
-
-                    <a
-                            class="nav-link"
-                            th:classappend="${activePage == 'home' ? 'active' : 'text-light'}"
-                            th:href="@{/}">
-
-                        Home
-
-                    </a>
-
-                </li>
-
-
-                <!-- Products -->
-
-                <li class="nav-item text-center">
-
-                    <a
-                            class="nav-link"
-                            th:classappend="${activePage == 'products' ? 'active' : 'text-light'}"
-                            th:href="@{/products}">
-
-                        Products
-
-                    </a>
-
-                </li>
-
-
-                <!-- Category -->
-
-                <li class="nav-item text-center">
-
-                    <a
-                            class="nav-link"
-                            th:classappend="${activePage == 'categories' ? 'active' : 'text-light'}"
-                            th:href="@{/categories}">
-
-                        Categories
-
-                    </a>
-
-                </li>
-
-
-            </ul>
-
-
-        </div>
-
-    </div>
-
-</nav>
-
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- ==============================
      HERO
@@ -169,84 +48,269 @@
             Premium Apple Products
         </p>
 
-        <button class="btn btn-primary btn-lg mt-3">
+        <!--VISA CARD DEMO SECTION-->
+        <div class="container my-2 text-center">
+            <h3 class="mb-4">Payment Preview</h3>
+            <div class="visa-card-wrapper">
+                <div class="visa-card">
+                    <div class="card-front">
+                        <div class="card-top">
+                            <div class="chip"></div>
+                            <div class="logo">VISA</div>
+                        </div>
+
+                        <div class="card-number" contenteditable="false" spellcheck="false">
+                            9704198526191432198
+                        </div>
+
+                        <div class="card-details">
+                            <div class="detail-group">
+                                <span class="label">CARD HOLDER</span>
+                                <div class="value" contenteditable="false" spellcheck="false">NGUYEN VAN A</div>
+                            </div>
+                            <div class="detail-group">
+                                <span class="label">EXPIRES</span>
+                                <div class="value" contenteditable="false" spellcheck="false">07/15</div>
+                            </div>
+                            <div class="detail-group">
+                                <span class="label">OTP</span>
+                                <div class="value" contenteditable="false" spellcheck="false">123456</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <a href="/products"
+           class="btn btn-dark btn-lg mt-3 text-white">
             Shop Now
-        </button>
+        </a>
 
     </div>
 
 </section>
 
+<!--ACCOUNT DEMO-->
+
+<section class="container py-4">
+
+    <div class="text-center mb-4">
+        <h2 class="text-light mb-2">Demo Accounts</h2>
+        <p class="text-secondary mb-0">
+            Try Chantaro Store with different user roles
+        </p>
+    </div>
+
+    <div class="row g-3 justify-content-center">
+
+        <!-- Customer -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary h-100 p-3">
+
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-person-circle fs-4 text-info me-2"></i>
+                    <div>
+                        <h5 class="text-light mb-1">Customer</h5>
+                        <small class="text-info">ROLE_CUSTOMER</small>
+                    </div>
+                </div>
+
+                <small class="text-secondary">Username</small>
+                <div class="d-flex justify-content-between mb-3">
+                    <code class="text-light">customer</code>
+                    <button class="btn btn-sm btn-outline-secondary"
+                            onclick="copyDemoText('customer')">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+
+                <small class="text-secondary">Password</small>
+                <div class="d-flex justify-content-between mb-3">
+                    <code class="text-light">Customer@123</code>
+                    <button class="btn btn-sm btn-outline-secondary"
+                            onclick="copyDemoText('Customer@123')">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+
+                <a href="/login"
+                   class="btn btn-dark btn-sm w-100 mt-auto shadow border-secondary">
+                    Login as Customer
+                </a>
+
+            </div>
+        </div>
+
+
+        <!-- Staff -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary h-100 p-3">
+
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-person-badge fs-4 text-warning me-2"></i>
+                    <div>
+                        <h5 class="text-light mb-1">Staff</h5>
+                        <small class="text-warning">ROLE_STAFF</small>
+                    </div>
+                </div>
+
+                <small class="text-secondary">Username</small>
+                <div class="d-flex justify-content-between mb-3">
+                    <code class="text-light">staff</code>
+                    <button class="btn btn-sm btn-outline-secondary"
+                            onclick="copyDemoText('staff')">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+
+                <small class="text-secondary">Password</small>
+                <div class="d-flex justify-content-between mb-3">
+                    <code class="text-light">Staff@123</code>
+                    <button class="btn btn-sm btn-outline-secondary"
+                            onclick="copyDemoText('Staff@123')">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+
+                <a href="/login"
+                   class="btn btn-dark btn-sm w-100 mt-auto shadow border-secondary">
+                    Login as Staff
+                </a>
+
+            </div>
+        </div>
+
+
+        <!-- Admin -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary h-100 p-3">
+
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-shield-lock fs-4 text-danger me-2"></i>
+                    <div>
+                        <h5 class="text-light mb-1">Admin</h5>
+                        <small class="text-danger">ROLE_ADMIN</small>
+                    </div>
+                </div>
+
+                <small class="text-secondary">Username</small>
+                <div class="d-flex justify-content-between mb-3">
+                    <code class="text-light">admin</code>
+                    <button class="btn btn-sm btn-outline-secondary"
+                            onclick="copyDemoText('admin')">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+
+                <small class="text-secondary">Password</small>
+                <div class="d-flex justify-content-between mb-3">
+                    <code class="text-light">Admin@123</code>
+                    <button class="btn btn-sm btn-outline-secondary"
+                            onclick="copyDemoText('Admin@123')">
+                        <i class="bi bi-copy"></i>
+                    </button>
+                </div>
+
+                <a href="/login"
+                   class="btn btn-dark btn-sm w-100 mt-auto shadow border-secondary">
+                    Login as Admin
+                </a>
+
+            </div>
+        </div>
+
+    </div>
+</section>
 
 <!-- ==============================
      PRODUCTS
 ================================== -->
 
-<section class="products-section container py-5">
+<section class="container py-5">
 
     <!-- Section title -->
     <div class="text-center mb-5">
 
-        <h2>
+        <h2 class="fw-semibold">
             Featured Products
         </h2>
+
+        <p class="text-secondary mb-0">
+            Discover the latest Apple products
+        </p>
 
     </div>
 
 
-    <!--
-        Product grid
-
-        Desktop  : 3 products / row
-        Tablet   : 2 products / row
-        Mobile   : 1 product / row
-    -->
+    <!-- ==============================
+         PRODUCT BANNERS
+    ================================== -->
 
     <div class="row g-4">
 
 
         <!-- ==============================
-             PRODUCT 1
+             IPHONE 15 PRO
         ================================== -->
 
-        <div class="col-12 col-sm-6 col-lg-4">
+        <div class="col-12 col-lg-6">
 
-            <div class="card product-card text-center p-4 h-100"
-                 data-product-id="1">
+            <div class="card bg-dark text-light border-secondary
+                        rounded-4 overflow-hidden h-100">
 
-                <!-- Product image -->
-                <div class="product-image mb-3">
-
-                    <img
-                            src="/images/iphone15pro.png"
-                            class="img-fluid"
-                            alt="iPhone 15 Pro">
-
-                </div>
+                <div class="row g-0 h-100">
 
 
-                <!-- Product information -->
-                <div class="product-info">
+                    <!-- Content -->
 
-                    <!-- Tên sản phẩm -->
-                    <h5 class="product-title text-light">
-                        iPhone 15 Pro
-                    </h5>
+                    <div class="col-7
+                                d-flex flex-column
+                                justify-content-center
+                                p-4">
 
-                    <!-- Mô tả -->
-                    <p class="product-description text-secondary">
-                        Powerful performance with a premium titanium design.
-                    </p>
+                        <span class="badge bg-primary align-self-start mb-3">
+                            NEW
+                        </span>
 
-                    <!-- Giá -->
-                    <p class="product-price text-primary fw-bold">
-                        22.990.000 VND
-                    </p>
+                        <h3 class="fw-semibold">
+                            iPhone 15 Pro
+                        </h3>
 
-                    <!-- Action -->
-                    <button class="btn btn-primary">
-                        Add to Cart
-                    </button>
+                        <p class="text-secondary mb-3">
+                            Titanium.
+                            So strong. So light.
+                            So Pro.
+                        </p>
+
+                        <p class="text-primary fw-bold mb-3">
+                            22.990.000 VND
+                        </p>
+
+                        <a href="/products"
+                           class="btn btn-primary align-self-start">
+
+                            View Product
+                            <i class="bi bi-arrow-right ms-2"></i>
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- Image -->
+
+                    <div class="col-5
+                                d-flex
+                                align-items-center
+                                justify-content-center">
+
+                        <img
+                                src="/images/iphone15pro.png"
+                                class="img-fluid"
+                                alt="iPhone 15 Pro">
+
+                    </div>
 
                 </div>
 
@@ -255,48 +319,71 @@
         </div>
 
 
+
         <!-- ==============================
-             PRODUCT 2
+             MACBOOK PRO
         ================================== -->
 
-        <div class="col-12 col-sm-6 col-lg-4">
+        <div class="col-12 col-lg-6">
 
-            <div class="card product-card text-center p-4 h-100"
-                 data-product-id="2">
+            <div class="card bg-dark text-light border-secondary
+                        rounded-4 overflow-hidden h-100">
 
-                <!-- Product image -->
-                <div class="product-image mb-3">
-
-                    <img
-                            src="/images/macbookpro.png"
-                            class="img-fluid"
-                            alt="MacBook Pro">
-
-                </div>
+                <div class="row g-0 h-100">
 
 
-                <!-- Product information -->
-                <div class="product-info">
+                    <!-- Content -->
 
-                    <!-- Tên sản phẩm -->
-                    <h5 class="product-title text-light">
-                        MacBook Pro
-                    </h5>
+                    <div class="col-7
+                                d-flex flex-column
+                                justify-content-center
+                                p-4">
 
-                    <!-- Mô tả -->
-                    <p class="product-description text-secondary">
-                        Professional performance for work, creativity and development.
-                    </p>
+                        <span class="badge bg-warning text-dark
+                                     align-self-start mb-3">
 
-                    <!-- Giá -->
-                    <p class="product-price text-primary fw-bold">
-                        49.990.000 VND
-                    </p>
+                            PRO
 
-                    <!-- Action -->
-                    <button class="btn btn-primary">
-                        Add to Cart
-                    </button>
+                        </span>
+
+                        <h3 class="fw-semibold">
+                            MacBook Pro
+                        </h3>
+
+                        <p class="text-secondary mb-3">
+                            Power.
+                            Performance.
+                            For professionals.
+                        </p>
+
+                        <p class="text-primary fw-bold mb-3">
+                            49.990.000 VND
+                        </p>
+
+                        <a href="/products"
+                           class="btn btn-primary align-self-start">
+
+                            View Product
+                            <i class="bi bi-arrow-right ms-2"></i>
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- Image -->
+
+                    <div class="col-5
+                                d-flex
+                                align-items-center
+                                justify-content-center">
+
+                        <img
+                                src="/images/macbookpro.png"
+                                class="img-fluid"
+                                alt="MacBook Pro">
+
+                    </div>
 
                 </div>
 
@@ -305,48 +392,63 @@
         </div>
 
 
+
         <!-- ==============================
-             PRODUCT 3
+             AIRPODS PRO
         ================================== -->
 
-        <div class="col-12 col-sm-6 col-lg-4">
+        <div class="col-12 col-lg-6">
 
-            <div class="card product-card text-center p-4 h-100"
-                 data-product-id="3">
+            <div class="card bg-dark text-light border-secondary
+                        rounded-4 overflow-hidden h-100">
 
-                <!-- Product image -->
-                <div class="product-image mb-3">
-
-                    <img
-                            src="/images/airpodspro.png"
-                            class="img-fluid"
-                            alt="AirPods Pro">
-
-                </div>
+                <div class="row g-0 h-100">
 
 
-                <!-- Product information -->
-                <div class="product-info">
+                    <!-- Content -->
 
-                    <!-- Tên sản phẩm -->
-                    <h5 class="product-title text-light">
-                        AirPods Pro
-                    </h5>
+                    <div class="col-7
+                                d-flex flex-column
+                                justify-content-center
+                                p-4">
 
-                    <!-- Mô tả -->
-                    <p class="product-description text-secondary">
-                        Immersive sound with active noise cancellation.
-                    </p>
+                        <h4 class="fw-semibold">
+                            AirPods Pro
+                        </h4>
 
-                    <!-- Giá -->
-                    <p class="product-price text-primary fw-bold">
-                        6.490.000 VND
-                    </p>
+                        <p class="text-secondary mb-3">
+                            Immersive sound with
+                            Active Noise Cancellation.
+                        </p>
 
-                    <!-- Action -->
-                    <button class="btn btn-primary">
-                        Add to Cart
-                    </button>
+                        <p class="text-primary fw-bold mb-3">
+                            6.490.000 VND
+                        </p>
+
+                        <a href="/products"
+                           class="btn btn-primary align-self-start">
+
+                            View Product
+                            <i class="bi bi-arrow-right ms-1"></i>
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- Image -->
+
+                    <div class="col-5
+                                d-flex
+                                align-items-center
+                                justify-content-center">
+
+                        <img
+                                src="/images/airpodspro.png"
+                                class="img-fluid"
+                                alt="AirPods Pro">
+
+                    </div>
 
                 </div>
 
@@ -355,41 +457,64 @@
         </div>
 
 
+
         <!-- ==============================
-             PRODUCT 4
+             APPLE WATCH
         ================================== -->
 
-        <div class="col-12 col-sm-6 col-lg-4">
+        <div class="col-12 col-lg-6">
 
-            <div class="card product-card text-center p-4 h-100"
-                 data-product-id="4">
+            <div class="card bg-dark text-light border-secondary
+                        rounded-4 overflow-hidden h-100">
 
-                <div class="product-image mb-3">
+                <div class="row g-0 h-100">
 
-                    <img
-                            src="/images/applewatch.png"
-                            class="img-fluid product-img-large"
-                            alt="Apple Watch">
 
-                </div>
+                    <!-- Content -->
 
-                <div class="product-info">
+                    <div class="col-7
+                                d-flex flex-column
+                                justify-content-center
+                                p-4">
 
-                    <h5 class="product-title text-light">
-                        Apple Watch
-                    </h5>
+                        <h4 class="fw-semibold">
+                            Apple Watch
+                        </h4>
 
-                    <p class="product-description text-secondary">
-                        Stay active, connected and healthy every day.
-                    </p>
+                        <p class="text-secondary mb-3">
+                            Stay active.
+                            Stay connected.
+                            Every day.
+                        </p>
 
-                    <p class="product-price text-primary fw-bold">
-                        12.990.000 VND
-                    </p>
+                        <p class="text-primary fw-bold mb-3">
+                            12.990.000 VND
+                        </p>
 
-                    <button class="btn btn-primary">
-                        Add to Cart
-                    </button>
+                        <a href="/products"
+                           class="btn btn-primary align-self-start">
+
+                            View Product
+                            <i class="bi bi-arrow-right ms-1"></i>
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- Image -->
+
+                    <div class="col-5
+                                d-flex
+                                align-items-center
+                                justify-content-center">
+
+                        <img
+                                src="/images/applewatch.png"
+                                class="img-fluid"
+                                alt="Apple Watch">
+
+                    </div>
 
                 </div>
 
@@ -415,11 +540,11 @@
 
 </footer>
 
-
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!--auth.js -> export function ...() -> navbar.js import { ...() } from "./auth.js" -> HTML chỉ cần load navbar.js bằng type="module"-->
-<script type="module" src="/js/navbar.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/navbar.js"></script>
 
 </body>
 

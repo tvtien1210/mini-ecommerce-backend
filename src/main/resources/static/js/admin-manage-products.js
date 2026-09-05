@@ -1,5 +1,3 @@
-import {apiFetch} from "./api.js";
-
 // DOM ELEMENTS
 
 // <tbody> dùng để render danh sách Product trên Desktop
@@ -326,98 +324,102 @@ function renderDesktopProducts(products){
 
     //Lấy mảng products → biến mỗi Product thành một <tr> → ghép tất cả lại → đưa vào <tbody>.
     //product lay ra tu list products tu response cua database
-     productTableBodyElement.innerHTML = products.map(product => `
+     productTableBodyElement.innerHTML = products.map(function(product) {
 
-     <tr>
+        return `
 
-         <!-- PRODUCT -->
-         <td class="ps-4">
+             <tr>
 
-             <div class="d-flex align-items-center gap-3">
+                 <!-- PRODUCT -->
+                 <td class="ps-4">
 
-                 <img
-                     src="${product.imageUrl || ""}"
-                     alt="${escapeHtml(product.name)}"
-                     class="rounded border"
-                     width="50"
-                     height="50"
-                 >
+                     <div class="d-flex align-items-center gap-3">
 
-                 <div>
+                         <img
+                             src="${product.imageUrl || ""}"
+                             alt="${escapeHtml(product.name)}"
+                             class="rounded border"
+                             width="50"
+                             height="50"
+                         >
 
-                     <div class="fw-semibold">
-                         ${escapeHtml(product.name)}
+                         <div>
+
+                             <div class="fw-semibold">
+                                 ${escapeHtml(product.name)}
+                             </div>
+
+                             <small class="text-secondary">
+                                 ID: ${product.id}
+                             </small>
+
+                         </div>
+
                      </div>
 
-                     <small class="text-secondary">
-                         ID: ${product.id}
-                     </small>
-
-                 </div>
-
-             </div>
-
-         </td>
+                 </td>
 
 
-         <!-- DESCRIPTION -->
-         <td>
+                 <!-- DESCRIPTION -->
+                 <td>
 
-             <span class="text-secondary">
-                 ${escapeHtml(truncateText(product.description, 70))}
-             </span>
+                     <span class="text-secondary">
+                         ${escapeHtml(truncateText(product.description, 70))}
+                     </span>
 
-         </td>
-
-
-         <!-- PRICE -->
-         <td>
-
-             <span class="text-success fw-semibold">
-                 ${formatPrice(product.price, product.currency)}
-             </span>
-
-         </td>
+                 </td>
 
 
-         <!-- STOCK -->
-         <td>
+                 <!-- PRICE -->
+                 <td>
 
-             ${getStockBadge(product.stock)}
+                     <span class="text-success fw-semibold">
+                         ${formatPrice(product.price, product.currency)}
+                     </span>
 
-         </td>
+                 </td>
 
 
-         <!-- ACTIONS -->
-         <td class="text-end pe-4">
+                 <!-- STOCK -->
+                 <td>
 
-             <!-- EDIT BUTTON - Cach 1: goi onclick trong html-->
-             <button
-                 type="button"
-                 class="btn btn-outline-success btn-sm"
-                 onclick = "openEditProductModal(${product.id})">
+                     ${getStockBadge(product.stock)}
 
-                 Edit
+                 </td>
 
-             </button>
 
-              <!-- DELETE BUTTON - Cach 2: khong goi onclick trong html-->
-             <button
-                 type="button"
-                 class="btn btn-outline-danger btn-sm ms-2"
-                 data-action="delete"
-                 data-product-id="${product.id}"
-                 >
+                 <!-- ACTIONS -->
+                 <td class="text-end pe-4">
 
-                 Delete
+                     <!-- EDIT BUTTON - Cach 1: goi onclick trong html-->
+                     <button
+                         type="button"
+                         class="btn btn-outline-success btn-sm"
+                         onclick = "openEditProductModal(${product.id})">
 
-             </button>
+                         Edit
 
-         </td>
+                     </button>
 
-     </tr>
+                      <!-- DELETE BUTTON - Cach 2: khong goi onclick trong html-->
+                     <button
+                         type="button"
+                         class="btn btn-outline-danger btn-sm ms-2"
+                         data-action="delete"
+                         data-product-id="${product.id}"
+                         >
 
-     `).join("");
+                         Delete
+
+                     </button>
+
+                 </td>
+
+             </tr>
+
+             `
+
+            }).join("");
 
      //Sau khi HTML duoc render xong, tim tat ca cac button edit, delete
      //Lan nay toi thu lam theo cach thu 2: la tim button delete
@@ -814,19 +816,9 @@ function getStockBadge(stock) {
 
 //FUNCTION SHOW TOAST
 
-//HIen thi Toast voi noi dung message duoc truyen vao
+//Hien thi Toast voi noi dung message duoc truyen vao
 
 function showToast(message, type = "success") {
-
-    // Lấy Toast element
-    const toastElement =
-        document.getElementById("toast");
-
-    // Lấy element chứa nội dung message
-    const toastMessageElement =
-        document.getElementById("toastMessage");
-
-
     // Xóa màu cũ
     toastElement.classList.remove(
         "text-bg-success",

@@ -5,10 +5,14 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.entity.CartItem;
 
 public class CartItemMapper {
     public static CartItemDTO toDTO(CartItem cartItem){
+
+        String imageUrl = cartItem.getProduct().getImageUrl();
+
         return new CartItemDTO(
                 cartItem.getId(),
                 cartItem.getProduct().getId(),
                 cartItem.getProduct().getName(),
+                imageUrl,
                 cartItem.getQuantity(),
                 cartItem.getPrice()
         );

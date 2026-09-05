@@ -43,6 +43,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 || path.startsWith("/register") //startsWith : phải bắt đầu bằng
                 || path.equals("/api/auth/refresh")
                 || path.equals("/categories")
+                || path.equals("/product")
+                || path.equals("/cart")
                 || path.equals("/api/payment/ipn")
                 || path.equals("/api/payment/return")
                 || path.equals("/api/auth/login")
