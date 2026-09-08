@@ -38,13 +38,18 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        return path.equals("/") // equasls : phải bằng
+        return
+                //PAGE
+                path.equals("/") // equasls : phải bằng
                 || path.equals("/login")
                 || path.startsWith("/register") //startsWith : phải bắt đầu bằng
                 || path.equals("/api/auth/refresh")
                 || path.equals("/categories")
                 || path.equals("/product")
                 || path.equals("/cart")
+                || path.equals("/payment-result")
+                || path.equals("/myorders")
+                //API
                 || path.equals("/api/payment/ipn")
                 || path.equals("/api/payment/return")
                 || path.equals("/api/auth/login")

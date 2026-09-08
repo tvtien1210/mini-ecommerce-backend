@@ -96,6 +96,10 @@ async function addToCart(
             return;
         }
 
+        if(response.status === 401){
+            window.location.href="/login";
+        }
+
 
         // CHECK RESPONSE
 

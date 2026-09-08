@@ -3,6 +3,7 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.checkout.CheckoutDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.order.OrderDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.orderstatus.UpdateOrderStatusRequest;
+import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Order;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,15 @@ public class OrderRestController {
         return orderService.getMyOrders();
     }
 
-//    @PostMapping
-//    public OrderDTO createOrder(@Valid @RequestBody CreateOrderRequest rq){
-//        return orderService.createOrder(rq);
-//    }
+    @GetMapping("/{id}")
+    public OrderDTO getOrderById(Long orderId) {
+        return orderService.getOrderById(orderId);
+    }
+
+    // @PostMapping
+    // public OrderDTO createOrder(@Valid @RequestBody CreateOrderRequest rq){
+    //    return orderService.createOrder(rq);
+    // }
 
     @PostMapping("/checkout")
     public CheckoutDTO checkout(

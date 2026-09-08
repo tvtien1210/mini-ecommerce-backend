@@ -164,7 +164,7 @@ public class Cart {
 
     //Helper Methodđã
     public void addItem(CartItem cartItem){
-        // add vào collection
+        // add cartItme vào collection list cartItems
         cartItems.add(cartItem);
 
         // set chiều ngược lại (IMPORTANT)

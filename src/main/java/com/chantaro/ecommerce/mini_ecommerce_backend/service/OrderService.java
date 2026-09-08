@@ -103,7 +103,9 @@ public class OrderService {
 
         // Viết gọn lại code dưới dùng Stream API
         // Stream API利用
-        return orderRepository.findByUser(user).stream()
+        List<Order> orders = orderRepository.findByUser(user);
+
+        return orders.stream()
                 .map(order -> OrderMapper.toDTO(order))
                 .toList();
     }
@@ -242,10 +244,8 @@ public class OrderService {
         // ============================================================
         // 4. VALIDATE CART
         //    カートバリデーション
-        //
         //    CASE:
-        //    Không có PENDING Order
-        //    → Có thể bắt đầu tạo Order mới
+        //    KHÔNG CÓ PENDING ORDER -> TẠO ORDER PENDING MỚI
         // ============================================================
 
         // Không cho phép checkout Cart rỗng
@@ -267,6 +267,7 @@ public class OrderService {
         // ------------------------------------------------------------
         // 5.1. SET ORDER USER
         //      注文ユーザー設定
+        // Order <-> User , xac dinh chinh xac order cua user nao, user da duoc xac dinh phia tren SecurityContextHolder
         // ------------------------------------------------------------
 
         order.setUser(user);
@@ -468,106 +469,15 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        //Tim status by code
-        // ステータスコード取得
-
-        //query du lieu da duoc luu trong database
-        // DB保存済みステータス
-
-        //Chú ý:
-        // 注意：
-
-        // nếu viết order.getOrderStatus().setCode(rq.getStatusCode());
-        // 直接変更禁止
-
-        //Toàn bộ order đang PENDING → thành SHIPPED 😱 DAME!
-        // 全注文ステータス破壊リスク
-
-        OrderStatusCode newOrderStatus = rq.getStatusCode();
-
-        //Status code hiện tại của order hiện tại
-        // 現在ステータス取得
-        if (order.getStatus() == null) {
-
-            // ステータス未設定エラー
-            throw new BusinessException(ErrorCode.ORDER_STATUS_MISSING);
-        }
-
-        OrderStatusCode currentOrderStatusCode = order.getStatus();
-
-        //Không cập nhật nếu trùng statusCode
-        // 同一ステータス更新禁止
-
-        //Enum dùng == luôn cho nhanh
-        // Enum比較は==使用可能
-        if (currentOrderStatusCode == rq.getStatusCode()) {
-            throw new BusinessException(ErrorCode.ORDER_STATUS_ALREADY_SET);
-        }
-
-        //Không thoả mãn điều kiện chỉ cập nhật from A to B thì throw new exception
-        // 不正ステータス遷移チェック
-        if (!isValidTransition(currentOrderStatusCode, rq.getStatusCode())) {
-            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS_TRANSITION);
-        }
-
-        //Cap nhat status
-        // ステータス更新
-
-        // n order tham chieu den 1 status (status_id)
-        // 複数注文が1ステータス参照
-
-        //orderStatus se bao gom cac field dang ton tai trong class OrderStatus
-        // OrderStatusエンティティ参照
-
-        order.setStatus(newOrderStatus);
+        transitionOrderStatus(
+                order,
+                rq.getStatusCode()
+        );
 
         // 保存してDTO返却
         return OrderMapper.toDTO(orderRepository.save(order));
     }
 
-    //isValidTransition method
-    // ステータス遷移可能判定
-
-    //Cho biết từ trạng thái hiện tại có được phép chuyển sang trạng thái mới hay không
-    // 現在状態から次状態へ変更可能か確認
-    private boolean isValidTransition(OrderStatusCode from, OrderStatusCode to) {
-
-        // map theo biến hằng số (constant field)
-        // 定数Map参照
-
-        // contains(to), xem "to" có thuộc Set.of() không?
-        // 遷移可能状態チェック
-        return ALLOWED.getOrDefault(from, Set.of()).contains(to);
-    }
-
-
-    //Dùng Set.of() thay vì List.of()
-    // Set利用でcontains高速化
-
-    //Không cần trùng lặp + cần check nhanh .contains()
-    // 重複不要・検索高速
-    private static final Map<OrderStatusCode, Set<OrderStatusCode>> ALLOWED = Map.of(
-
-            // PENDING -> PAID / CANCELLED
-            OrderStatusCode.PENDING,
-            Set.of(OrderStatusCode.PAID, OrderStatusCode.CANCELLED),
-
-            // PAID -> SHIPPED
-            OrderStatusCode.PAID,
-            Set.of(OrderStatusCode.SHIPPED),
-
-            // SHIPPED -> DELIVERED
-            OrderStatusCode.SHIPPED,
-            Set.of(OrderStatusCode.DELIVERED),
-
-            // 終了状態
-            OrderStatusCode.DELIVERED,
-            Set.of(),
-
-            // キャンセル済み
-            OrderStatusCode.CANCELLED,
-            Set.of()
-    );
 
 
     //@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -675,22 +585,9 @@ public class OrderService {
         }
 
         // ステータス変更
-        changerStatus(order, OrderStatusCode.PAID);
+        transitionOrderStatus(order, OrderStatusCode.PAID);
     }
 
-    private void changerStatus(Order order, OrderStatusCode newStatus) {
-
-        // 現在状態取得
-        OrderStatusCode currentStatusCode = order.getStatus();
-
-        // 不正遷移チェック
-        if (!isValidTransition(currentStatusCode, newStatus)) {
-            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS_TRANSITION);
-        }
-
-        // ステータス更新
-        order.setStatus(newStatus);
-    }
 
     public OrderDTO cancelOrder(Long id, Authentication authentication) {
         String username =
@@ -738,6 +635,102 @@ public class OrderService {
 
         return OrderMapper.toDTO(saved);
     }
+
+
+    //TRANSITION ORDER STATUS METHOD
+    private void transitionOrderStatus(
+            Order order,
+            OrderStatusCode newStatus
+    ) {
+
+        OrderStatusCode currentStatus =
+                order.getStatus();
+
+        // Current status không tồn tại
+        if (currentStatus == null) {
+
+            throw new BusinessException(
+                    ErrorCode.ORDER_STATUS_MISSING
+            );
+        }
+
+        // New status không tồn tại
+        if (newStatus == null) {
+
+            throw new BusinessException(
+                    ErrorCode.ORDER_STATUS_MISSING
+            );
+        }
+
+        // Không cho chuyển sang chính status hiện tại
+        if (currentStatus == newStatus) {
+
+            throw new BusinessException(
+                    ErrorCode.ORDER_STATUS_ALREADY_SET
+            );
+        }
+
+        // Kiểm tra transition có hợp lệ không
+        if (!isValidTransition(
+                currentStatus,
+                newStatus
+        )) {
+
+            throw new BusinessException(
+                    ErrorCode.INVALID_ORDER_STATUS_TRANSITION
+            );
+        }
+
+        // Thực hiện thay đổi status
+        order.setStatus(newStatus);
+    }
+
+    //ISVALID TRANSITION METHOD
+    // ステータス遷移可能判定
+
+    //Cho biết từ trạng thái hiện tại có được phép chuyển sang trạng thái mới hay không
+    // 現在状態から次状態へ変更可能か確認
+    private boolean isValidTransition(OrderStatusCode from, OrderStatusCode to) {
+
+        // map theo biến hằng số (constant field)
+        // 定数Map参照
+
+        // contains(to), xem "to" có thuộc Set.of() không?
+        // 遷移可能状態チェック
+        return ALLOWED.getOrDefault(from, Set.of()).contains(to);
+    }
+
+
+    //ALLOWED TRANSITION METHOD
+    //Dùng Set.of() thay vì List.of()
+    // Set利用でcontains高速化
+
+    //Không cần trùng lặp + cần check nhanh .contains()
+    // 重複不要・検索高速
+    private static final Map<OrderStatusCode, Set<OrderStatusCode>> ALLOWED = Map.of(
+
+            // PENDING -> PAID / CANCELLED
+            OrderStatusCode.PENDING,
+            Set.of(OrderStatusCode.PAID, OrderStatusCode.CANCELLED),
+
+            // PAID -> SHIPPED
+            OrderStatusCode.PAID,
+            Set.of(OrderStatusCode.SHIPPED),
+
+            // SHIPPED -> DELIVERED
+            OrderStatusCode.SHIPPED,
+            Set.of(OrderStatusCode.DELIVERED),
+
+            // 終了状態
+            OrderStatusCode.DELIVERED,
+            Set.of(),
+
+            // キャンセル済み
+            OrderStatusCode.CANCELLED,
+            Set.of()
+    );
+
+
 }
 
 /*

@@ -120,7 +120,12 @@ public class SecurityConfig {
                                 "/register/**",
                                 "/products/**",
                                 "/categories/**",
-                                "/cart"
+                                "/cart",
+                                "/myorders",
+                                //Sau khi vào page, JavaScript mới gọi API (apiFectch, check response qua token) backend để lấy thông tin checkout
+                                "/checkout",
+                                //Sau khi vào page, JavaScript mới gọi API (apiFectch, check response qua token) backend để lấy thông tin order.
+                                "/payment-result"
                         ).permitAll()
 
                         // =========================================================
@@ -346,7 +351,6 @@ public class SecurityConfig {
                 )
 
 
-
                 // =========================================================
                 // EXCEPTION HANDLING
                 // =========================================================
@@ -364,23 +368,73 @@ public class SecurityConfig {
 
                 .exceptionHandling(exception -> exception
 
+                        // ==================================================
+                        // USER CHƯA ĐĂNG NHẬP
+                        // ==================================================
+                        // Trường hợp User chưa authenticate
+                        // Ví dụ:
+                        // User chưa login nhưng truy cập /checkout
+                        //
+                        // Spring Security sẽ gọi authenticationEntryPoint
                         .authenticationEntryPoint(
                                 (request, response, authException) -> {
 
+                                    // HTTP Status 401
+                                    // 401 = User chưa được xác thực
                                     response.setStatus(
                                             HttpServletResponse.SC_UNAUTHORIZED
                                     );
 
+                                    // Response trả về dưới dạng JSON
                                     response.setContentType(
                                             "application/json"
                                     );
 
+                                    // Trả thông tin lỗi về cho Frontend
                                     response.getWriter().write("""
-                                    {
-                                        "code": 401,
-                                        "message": "UNAUTHENTICATED"
-                                    }
-                                    """);
+                                            {
+                                                "code": 401,
+                                                "message": "UNAUTHENTICATED"
+                                            }
+                                            """);
+                                }
+                        )
+
+
+                        // ==================================================
+                        // USER ĐÃ ĐĂNG NHẬP NHƯNG KHÔNG ĐỦ QUYỀN
+                        // ==================================================
+                        // Trường hợp User đã authenticate
+                        // nhưng không có Role phù hợp
+                        //
+                        // Ví dụ:
+                        // ADMIN đã login
+                        // nhưng truy cập /checkout
+                        // trong khi /checkout yêu cầu ROLE_CUSTOMER
+                        //
+                        // Spring Security sẽ gọi accessDeniedHandler
+                        .accessDeniedHandler(
+                                (request, response, accessDeniedException) -> {
+
+                                    // HTTP Status 403
+                                    // 403 = User đã đăng nhập
+                                    // nhưng không có quyền truy cập
+                                    response.setStatus(
+                                            HttpServletResponse.SC_FORBIDDEN
+                                    );
+
+                                    // Response trả về dưới dạng JSON
+                                    response.setContentType(
+                                            "application/json"
+                                    );
+
+                                    // Trả thông tin lỗi về cho Frontend
+                                    response.getWriter().write("""
+                                            {
+                                                "code": 403,
+                                                "message": "CUSTOMER_ROLE_REQUIRED"
+                                            }
+                                            """);
                                 }
                         )
                 )
@@ -431,7 +485,6 @@ ADMIN
  | CRUD Product
  | Manage User
  | View/Update Order*/
-
 
 
 //return http.build();

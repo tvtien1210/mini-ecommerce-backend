@@ -1,5 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.CurrentPaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -14,4 +15,6 @@ public interface PaymentService {
     void handleExpiredPayments();
 
     boolean verify(Map<String, String> params);
+
+    CurrentPaymentDTO getPaymentByTxnRef(String txnRef);
 }

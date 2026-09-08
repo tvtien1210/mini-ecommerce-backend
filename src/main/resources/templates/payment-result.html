@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Payment Result - Chantaro Store</title>
+
+  <link rel="stylesheet"
+        href="./css/style.css">
+
+  <!-- Bootstrap -->
+  <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-black text-white">
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<main class="container py-5">
+
+  <div class="row justify-content-center">
+
+    <div class="col-12 col-md-10 col-lg-7">
+
+
+      <!-- PAGE HEADER -->
+      <div class="text-center mb-4">
+
+        <div class="mb-3">
+          <i class="bi bi-credit-card-2-front-fill text-success fs-1"></i>
+        </div>
+
+        <h1 class="fw-bold">
+          Payment Result
+        </h1>
+
+        <p class="text-secondary">
+          Your payment status will appear below.
+        </p>
+
+      </div>
+
+
+      <!-- PAYMENT SUCCESS -->
+      <div id="payment-success">
+
+        <!-- JavaScript will render content here -->
+
+      </div>
+
+
+      <!-- PAYMENT FAILED -->
+      <div id="payment-failed">
+
+        <!-- JavaScript will render content here -->
+
+      </div>
+
+
+      <!-- PAYMENT PENDING -->
+      <div id="payment-pending">
+
+        <!-- JavaScript will render content here -->
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</main>
+
+
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+</script>
+
+<script src="./js/common.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/payment-result.js"></script>
+
+</body>
+</html>

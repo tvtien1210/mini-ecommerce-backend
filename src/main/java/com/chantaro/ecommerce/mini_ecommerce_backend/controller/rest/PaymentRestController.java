@@ -1,5 +1,6 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.CurrentPaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -58,5 +59,10 @@ public class PaymentRestController {
         paymentService.handleVNPayIPN(params);
 
         return "OK";
+    }
+
+    @GetMapping("/{txnRef}")
+    public CurrentPaymentDTO getPaymentByTxnRef(@PathVariable String txnRef) {
+        return paymentService.getPaymentByTxnRef(txnRef);
     }
 }

@@ -1,5 +1,7 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.order.OrderDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.CurrentPaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.CartStatusCode;
@@ -7,6 +9,7 @@ import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.OrderStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.PaymentStatusCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
+import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.OrderMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.PaymentMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.OrderRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.PaymentRepository;
@@ -55,7 +58,12 @@ public class PaymentServiceImpl implements PaymentService {
         String newTxnRef = "ORDER_" + orderId + "_" + System.currentTimeMillis();
 
         Payment savedPayment = new Payment();
+
+        //Khi vnpay trả dữ liệu về với TxnRef, lúc này sẽ biết được payment này thuộc về orderId nào nhờ savedPayment.setOrder(order);
+        //Từ đó tra ra const params = new URLSearchParams(window.location.search);
+        //const orderId = params.get("orderId"); trong payment-result.js
         savedPayment.setOrder(order);
+
         savedPayment.setTxnRef(newTxnRef);
         savedPayment.setAmount(order.getTotalPrice());
         savedPayment.setStatus(PaymentStatusCode.PENDING);
@@ -220,6 +228,13 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public boolean verify(Map<String, String> params) {
         return vnPayUtil.verify(params);
+    }
+
+    @Override
+    public CurrentPaymentDTO getPaymentByTxnRef(String txnRef) {
+        Payment payment = paymentRepository.findByTxnRef(txnRef).orElseThrow(()->new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+        Order order = payment.getOrder();
+        return PaymentMapper.currentPaymentDTO(payment, OrderMapper.toDTO(order));
     }
 
 }

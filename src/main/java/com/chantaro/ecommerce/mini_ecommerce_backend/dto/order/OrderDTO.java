@@ -17,7 +17,7 @@ public class OrderDTO {
     private Long id; //id order này tự nhảy số thứ tự
     //private Long userId;
     private List<OrderItemDTO> orderItems;
-    private OrderStatusCode status;
+    private OrderStatusCode orderStatus;
     private BigDecimal totalPrice;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

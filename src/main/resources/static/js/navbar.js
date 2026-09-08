@@ -4,6 +4,20 @@
 
 document.addEventListener("DOMContentLoaded", async function () {
 
+    // Khởi tạo Navbar
+    await initNavbar();
+
+    // Bao gom co logout event...
+    setupNavbarEvents();
+
+});
+
+
+// ==================================================
+// INITIALIZE NAVBAR
+// ==================================================
+
+async function initNavbar() {
 
     // ==================================================
     // GET ELEMENTS
@@ -12,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Lấy vị trí hiển thị thông tin User trên Navbar
     const userInfo = document.getElementById("userInfo");
 
-    // Lấy vị trí hiển thị Admin Menu trên Navbar
+    // Lấy vị trí hiển thị Admin / Staff Menu trên Navbar
     const adminMenu = document.getElementById("adminMenu");
 
 
@@ -30,48 +44,26 @@ document.addEventListener("DOMContentLoaded", async function () {
     // ==================================================
 
     if (!user) {
-        userInfo.innerHTML = `
-            <a class="nav-link text-white" href="/login">
-                <i class="bi bi-person-circle"></i>
-                Login
-            </a>
-        `;
 
+        // Hiển thị Login
+        renderLogin(userInfo);
+
+        // Không cần xử lý tiếp
         return;
     }
 
 
-  // ==================================================
-  // UPDATE CART BADGE
-  // ==================================================
+    // ==================================================
+    // UPDATE CART BADGE
+    // ==================================================
 
-  try {
-
-      // Gọi API lấy Cart hiện tại
-      const cartResponse = await apiFetch("/api/cart/my");
-
-      // Nếu API thành công
-      if (!cartResponse.ok) {throw new Error("Cart API failed")};
-
-       // Chuyển response thành CartDTO
-       const cart = await cartResponse.json();
-
-       // Cập nhật Cart Badge
-       updateCartBadge(cart);
-
-
-  } catch (error) {
-
-      //catch bat xong error o tren throw tren nhung code duoi van chay tiep
-      console.error(
-          "Failed to load cart:",
-          error
-      );
-  }
+    // User đã đăng nhập
+    // → lấy Cart và cập nhật Cart Badge
+    await updateNavbarCartBadge();
 
 
     // ==================================================
-    // USER ĐÃ ĐĂNG NHẬP
+    // GET USER INFORMATION
     // ==================================================
 
     // Lấy username từ CurrentUserDTO
@@ -80,6 +72,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Lấy danh sách Role
     const roles = user.roles || [];
 
+
+    // ==================================================
+    // CHECK ROLES
+    // ==================================================
 
     // Kiểm tra User có phải Customer hay không
     const isCustomer = roles.includes("ROLE_CUSTOMER");
@@ -90,236 +86,500 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Kiểm tra User có phải Admin hay không
     const isAdmin = roles.includes("ROLE_ADMIN");
 
-    // ==================================================
-    // CUSTOMER
-    // ==================================================
-
-    // Nếu User là Customer
-    if (isCustomer) {
-
-        // Hiển thị tên User và Dropdown Menu
-        userInfo.innerHTML = `
-            <div class="dropdown">
-
-                <a class="nav-link text-white dropdown-toggle"
-                   href="#"
-                   data-bs-toggle="dropdown">
-
-                    <i class="bi bi-person-circle me-1"></i>
-                    ${username}
-
-                </a>
-
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
-
-                    <li>
-                        <a class="dropdown-item text-start" href="#">
-                            <i class="bi bi-person me-2"></i>
-                            Profile
-                        </a>
-                    </li>
-
-                    <li>
-                        <a class="dropdown-item text-start" href="/myorders">
-                            <i class="bi bi-bag-check me-2"></i>
-                            My Orders
-                        </a>
-                    </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li>
-                        <a class="dropdown-item text-center"
-                           href="#"
-                           id="logoutBtn">
-
-                            Logout
-                            <i class="bi bi-box-arrow-right ms-2"></i>
-
-                        </a>
-                    </li>
-
-                </ul>
-
-            </div>
-        `;
-    }
 
     // ==================================================
-    // STAFF
+    // RENDER USER MENU
     // ==================================================
 
-    // Nếu User là Staff
-    if (isStaff) {
+    /*
+     * Ưu tiên:
+     *
+     * ADMIN
+     *   ↓
+     * STAFF
+     *   ↓
+     * CUSTOMER
+     */
 
-        // Hiển thị Staff Menu
-        adminMenu.classList.remove("d-none");
-
-        // Ẩn User Info
-        userInfo.classList.add("d-none");
-
-
-        // Tạo Staff Dropdown Menu
-        adminMenu.innerHTML = `
-
-            <div class="dropdown">
-
-                <a class="nav-link text-white dropdown-toggle"
-                   href="#"
-                   role="button"
-                   data-bs-toggle="dropdown">
-
-                    <i class="bi bi-person-badge me-1"></i>
-                    Staff
-
-                </a>
-
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
-
-                    <li>
-                        <a class="dropdown-item" href="/staff">
-                            <i class="bi bi-speedometer2 me-2"></i>
-                            Staff Dashboard
-                        </a>
-                    </li>
-
-                    <li>
-                        <a class="dropdown-item" href="/staff/orders">
-                            <i class="bi bi-cart-check me-2"></i>
-                            Manage Orders
-                        </a>
-                    </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li>
-                        <a class="dropdown-item text-center"
-                           href="#"
-                           id="logoutBtn">
-
-                            Logout
-                            <i class="bi bi-box-arrow-right ms-2"></i>
-
-                        </a>
-                    </li>
-
-                </ul>
-
-            </div>
-        `;
-    }
-
-
-    // ==================================================
-    // ADMIN
-    // ==================================================
-
-    // Nếu User là Admin
     if (isAdmin) {
 
-        // Hiển thị Admin Menu
-        adminMenu.classList.remove("d-none");
+        // User là Admin
+        renderAdmin(userInfo, adminMenu, username);
 
-        // Ẩn User Info của Customer
-        userInfo.classList.add("d-none");
+    } else if (isStaff) {
+
+        // User là Staff
+        renderStaff(userInfo, adminMenu, username);
+
+    } else if (isCustomer) {
+
+        // User là Customer
+        renderCustomer(userInfo,username);
+
+    }
+
+}
 
 
-        // Tạo Admin Dropdown Menu
-        adminMenu.innerHTML = `
+// ==================================================
+// RENDER LOGIN
+// ==================================================
 
-            <div class="dropdown">
+function renderLogin(userInfo) {
 
-                <a class="nav-link text-white dropdown-toggle"
-                   href="#"
-                   role="button"
-                   data-bs-toggle="dropdown">
+    // Hiển thị Login
+    userInfo.innerHTML = `
+        <a class="nav-link text-white" href="/login">
 
-                    <i class="bi bi-speedometer2"></i>
-                    Admin
+            <i class="bi bi-person-circle"></i>
 
-                </a>
+            Login
 
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+        </a>
+    `;
+}
 
-                    <li>
-                        <a class="dropdown-item" href="/admin">
-                            <i class="bi bi-speedometer2 me-2"></i>
-                            Admin Dashboard
-                        </a>
-                    </li>
 
-                    <li>
-                        <a class="dropdown-item" href="/admin/products">
-                            <i class="bi bi-box-seam me-2"></i>
-                            Manage Products
-                        </a>
-                    </li>
+// ==================================================
+// UPDATE CART BADGE
+// ==================================================
 
-                    <li>
-                        <a class="dropdown-item" href="/admin/orders">
-                            <i class="bi bi-cart-check me-2"></i>
-                            Manage Orders
-                        </a>
-                    </li>
+async function updateNavbarCartBadge() {
 
-                    <li>
-                        <a class="dropdown-item" href="/admin/users">
-                            <i class="bi bi-people me-2"></i>
-                            Manage Users
-                        </a>
-                    </li>
+    try {
 
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
+        // ==================================================
+        // CALL CART API
+        // ==================================================
 
-                    <li>
-                        <a class="dropdown-item text-center"
-                           href="#"
-                           id="logoutBtn">
+        // Gọi API lấy Cart hiện tại
+        const cartResponse = await apiFetch("/api/cart/my");
 
-                            Logout
-                            <i class="bi bi-box-arrow-right ms-2"></i>
 
-                        </a>
-                    </li>
+        // ==================================================
+        // CHECK RESPONSE
+        // ==================================================
 
-                </ul>
+        // Nếu API thất bại
+        if (!cartResponse.ok) {
 
-            </div>
-        `;
+            // Throw Error
+            // → chuyển xuống catch
+            throw new Error("Cart API failed");
+        }
+
+
+        // ==================================================
+        // PARSE JSON
+        // ==================================================
+
+        // Chuyển response thành CartDTO
+        const cart = await cartResponse.json();
+
+
+        // ==================================================
+        // UPDATE CART BADGE
+        // ==================================================
+
+        // Cập nhật Cart Badge
+        updateCartBadge(cart);
+
+
+    } catch (error) {
+
+        // ==================================================
+        // HANDLE ERROR
+        // ==================================================
+
+        /*
+         * Nếu Cart API lỗi:
+         *
+         * Không làm Navbar bị crash
+         *
+         * Chỉ log lỗi ra Console
+         */
+
+        console.error(
+            "Failed to load cart:",
+            error
+        );
+    }
+}
+
+
+// ==================================================
+// RENDER CUSTOMER
+// ==================================================
+
+function renderCustomer(userInfo,username) {
+
+    // ==================================================
+    // SHOW USER INFO
+    // ==================================================
+
+    // Hiển thị User Info
+    userInfo.classList.remove("d-none");
+
+
+    // ==================================================
+    // RENDER CUSTOMER MENU
+    // ==================================================
+
+    userInfo.innerHTML = `
+
+        <div class="dropdown">
+
+            <a class="nav-link text-white dropdown-toggle"
+               href="#"
+               role="button"
+               data-bs-toggle="dropdown">
+
+                <i class="bi bi-person-circle me-1"></i>
+
+                ${username}
+
+            </a>
+
+
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+
+                <li>
+
+                    <a class="dropdown-item text-start"
+                       href="#">
+
+                        <i class="bi bi-person me-2"></i>
+
+                        Profile
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item text-start"
+                       href="/myorders">
+
+                        <i class="bi bi-bag-check me-2"></i>
+
+                        My Orders
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <hr class="dropdown-divider">
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item text-center logout-btn"
+                       href="#">
+
+                        Logout
+
+                        <i class="bi bi-box-arrow-right ms-2"></i>
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+    `;
+}
+
+
+// ==================================================
+// RENDER STAFF
+// ==================================================
+
+function renderStaff(userInfo, adminMenu, username) {
+
+    // ==================================================
+    // SHOW STAFF MENU
+    // ==================================================
+
+    adminMenu.classList.remove("d-none");
+
+
+    // ==================================================
+    // HIDE USER INFO
+    // ==================================================
+
+    userInfo.classList.add("d-none");
+
+
+    // ==================================================
+    // RENDER STAFF DROPDOWN
+    // ==================================================
+
+    adminMenu.innerHTML = `
+
+        <div class="dropdown">
+
+            <a class="nav-link text-white dropdown-toggle"
+               href="#"
+               role="button"
+               data-bs-toggle="dropdown">
+
+                <i class="bi bi-person-badge me-1"></i>
+
+                ${username}
+
+            </a>
+
+
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/#">
+
+                        <i class="bi bi-speedometer2 me-2"></i>
+
+                        Staff Dashboard
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="#">
+
+                        <i class="bi bi-cart-check me-2"></i>
+
+                        Manage Orders
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <hr class="dropdown-divider">
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item text-center logout-btn"
+                       href="#">
+
+                        Logout
+
+                        <i class="bi bi-box-arrow-right ms-2"></i>
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+    `;
+}
+
+
+// ==================================================
+// RENDER ADMIN
+// ==================================================
+
+function renderAdmin(userInfo, adminMenu,username) {
+
+    // ==================================================
+    // SHOW ADMIN MENU
+    // ==================================================
+
+    adminMenu.classList.remove("d-none");
+
+
+    // ==================================================
+    // HIDE USER INFO
+    // ==================================================
+
+    userInfo.classList.add("d-none");
+
+
+    // ==================================================
+    // RENDER ADMIN DROPDOWN
+    // ==================================================
+
+    adminMenu.innerHTML = `
+
+        <div class="dropdown">
+
+            <a class="nav-link text-white dropdown-toggle"
+               href="#"
+               role="button"
+               data-bs-toggle="dropdown">
+
+                <i class="bi bi-speedometer2"></i>
+
+                Admin
+
+            </a>
+
+
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="#">
+
+                        <i class="bi bi-speedometer2 me-2"></i>
+
+                        Admin Dashboard
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/admin/products">
+
+                        <i class="bi bi-box-seam me-2"></i>
+
+                        Manage Products
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="#">
+
+                        <i class="bi bi-cart-check me-2"></i>
+
+                        Manage Orders
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/#">
+
+                        <i class="bi bi-people me-2"></i>
+
+                        Manage Users
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <hr class="dropdown-divider">
+
+                </li>
+
+
+                <li>
+
+                    <a class="dropdown-item text-center logout-btn"
+                       href="#">
+
+                        Logout
+
+                        <i class="bi bi-box-arrow-right ms-2"></i>
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+    `;
+}
+
+
+// ==================================================
+// LOGOUT
+// ==================================================
+
+function setupNavbarEvents(){
+// ==================================================
+    // GET LOGOUT BUTTON
+    // ==================================================
+
+    // Tìm Logout Button vừa được render
+    const logoutBtn = document.querySelector(".logout-btn");
+
+
+    // ==================================================
+    // CHECK BUTTON
+    // ==================================================
+
+    if (!logoutBtn) {
+        return;
     }
 
 
     // ==================================================
-    // LOGOUT
+    // CLICK EVENT
     // ==================================================
 
-    // Tìm nút Logout vừa được tạo trong Navbar
-    const logoutBtn = document.getElementById("logoutBtn");
+    logoutBtn.addEventListener("click", async function (e) {
+
+        // Ngăn hành động mặc định của <a>
+        e.preventDefault();
 
 
-    // Nếu tìm thấy nút Logout
-    if (logoutBtn) {
+        try {
 
-        // Đăng ký sự kiện Click
-        logoutBtn.addEventListener("click", async function (e) {
+            // ==================================================
+            // CALL LOGOUT API
+            // ==================================================
 
-            // Ngăn hành động mặc định của thẻ <a>
-            e.preventDefault();
-
-
-            // Gọi API Logout
             await logout();
 
 
-            // Sau khi Logout thành công chuyển User về trang Home
-            window.location.href = "/";
-        });
-    }
+            // ==================================================
+            // REDIRECT
+            // ==================================================
 
-});
+            // Sau khi Logout thành công
+            // chuyển User về Home
+            window.location.href = "/";
+
+
+        } catch (error) {
+
+            // ==================================================
+            // HANDLE LOGOUT ERROR
+            // ==================================================
+
+            console.error(
+                "Logout failed:",
+                error
+            );
+        }
+    });
+}

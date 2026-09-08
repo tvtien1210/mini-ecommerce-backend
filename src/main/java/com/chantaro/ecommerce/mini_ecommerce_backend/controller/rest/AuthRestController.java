@@ -43,7 +43,7 @@ public class AuthRestController {
         return ResponseEntity.ok(authService.register(request));
     }
 
-    // Check thong tin nguoi dung hien tai, de xac dinh user, phan quyen, token, de viet logic cho navbar, auth.js, quan ly login
+    // Check thong tin nguoi dung hien tai, de xac dinh user, phan quyen, token, de viet logic cho navbar quan ly login
     // GET /api/auth/me
     @GetMapping("/me")
     public ResponseEntity<CurrentUserDTO> getCurrentUser(HttpServletRequest request) {

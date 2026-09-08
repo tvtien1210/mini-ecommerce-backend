@@ -1,7 +1,7 @@
-document.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener("DOMContentLoaded", function () {
 
     // Load Cart khi mở trang
-    await loadCart();
+    loadCart();
 
     // Đăng ký sự kiện cho các button trong Cart
     setupCartEvents();
