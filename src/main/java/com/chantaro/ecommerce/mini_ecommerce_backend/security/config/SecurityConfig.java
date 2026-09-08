@@ -200,15 +200,11 @@ public class SecurityConfig {
                         // =========================================================
 
                         // View products
-                        // CUSTOMER / STAFF / ADMIN
+                        // CUSTOMER / STAFF / ADMIN / UNAUTHORIZATION: get product
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/products/**"
-                        ).hasAnyRole(
-                                "CUSTOMER",
-                                "STAFF",
-                                "ADMIN"
-                        )
+                        ).permitAll()
 
 
                         // Create product
