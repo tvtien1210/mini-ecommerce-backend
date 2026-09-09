@@ -285,33 +285,42 @@ public class VNPayUtil {
     // =========================
 
 
-    //Japan Time
-    ZoneId zoneId = ZoneId.of("Asia/Tokyo");
-
-    ZonedDateTime now = ZonedDateTime.now(zoneId);
+    // Japan Time
+    private final ZoneId zoneId = ZoneId.of("Asia/Tokyo");
 
     private String getCurrentTime() {
-        //Create Date = current time
-        String createDate =
-                now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        return createDate;
+
+        //ZonedDateTime now: nhớ cho vào trong getCurrentTime va getExpireTime mỗi lần gọi lại url vnpay để
+        // vnp_CreateDate update time mơi nhất
+
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+
+        return now.format(
+                DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+        );
     }
 
     private String getExpireTime() {
 
+        //ZonedDateTime now: nhớ cho vào trong getCurrentTime va getExpireTime mỗi lần gọi lại url vnpay để
+        // vnp_Expire Date update time mơi nhất
 
-        String expireDate =
-                now.plusMinutes(15)
-                        .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        return expireDate;
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+
+        return now.plusMinutes(15)
+                .format(
+                        DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+                );
     }
+
+
 
     private String getIpAddress(HttpServletRequest request) {
 
         // Lấy IP từ proxy/load balancer
         String ip = request.getHeader("X-Forwarded-For");
 
-        // Nếu có nhiều IP thì lấy IP đầu tiên
+        // Nếu có nhiều IP thì lấy IP đầu tiên, tránh lỗi khi có quá nhiều ip, vd 2 ip trở lên
         if (ip != null && !ip.isEmpty()) {
             return ip.split(",")[0].trim();
         }
