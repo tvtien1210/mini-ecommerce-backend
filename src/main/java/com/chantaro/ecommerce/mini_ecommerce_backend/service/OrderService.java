@@ -43,8 +43,8 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final StockRetryService stockRetryService;
+    private final StockService stockService;
     private final VNPayUtil vnPayUtil;
-
 
 
     public List<OrderDTO> getAllOrders() {
@@ -163,80 +163,109 @@ public class OrderService {
 
         if (pendingOrder != null) {
 
-            // Tìm Payment PENDING mới nhất của Order
-            // Paymentが存在しない場合は処理を中断
-            Payment pendingPayment = paymentRepository
-                    .findFirstByOrderAndStatusOrderByCreatedAtDesc(
-                            pendingOrder,
-                            PaymentStatusCode.PENDING
-                    )
-                    .orElseThrow(() -> new BusinessException(
-                            ErrorCode.PAYMENT_NOT_FOUND
-                    ));
+            // Kiểm tra Cart hiện tại có giống Order cũ không
+            boolean sameCart = isCartSameAsOrder(
+                    cart,
+                    pendingOrder
+            );
 
+            // ============================================================
+            // CASE 1: CART ĐÃ THAY ĐỔI
+            // ============================================================
 
-            // --------------------------------------------------------
-            // 3.1.1. PAYMENT STILL VALID
-            //       支払い有効期限内
-            //
-            //       Payment chắc chắn != null vì đã dùng orElseThrow()
-            // --------------------------------------------------------
+            if (!sameCart) {
 
-            LocalDateTime now = LocalDateTime.now();
-
-            //expiredAt >= now → còn hạn
-
-            if (pendingPayment.getExpiredAt().isAfter(now)
-                    || pendingPayment.getExpiredAt().isEqual(now)) {
-
-                // Payment vẫn còn hạn
-                String paymentUrl = vnPayUtil.buildPaymentUrl(
-                        pendingPayment.getAmount(),
-                        pendingPayment.getTxnRef(),
-                        request
+                // Order cũ không còn phù hợp với Cart hiện tại
+                // → Cancel Order cũ
+                pendingOrder.setStatus(
+                        OrderStatusCode.CANCELLED
                 );
 
-                return CheckoutMapper.toDTO(
-                        pendingOrder,
-                        PaymentMapper.toDTO(
-                                pendingPayment,
-                                paymentUrl
+                orderRepository.save(pendingOrder);
+
+                // Cart đã thay đổi so với Order PENDING cũ
+                if (!sameCart) {
+
+                    // Hủy Order cũ vì Order này không còn phản ánh Cart hiện tại
+                    pendingOrder.setStatus(OrderStatusCode.CANCELLED);
+                    orderRepository.save(pendingOrder);
+
+                    // Release lại số stock đã reserve cho Order cũ
+                    stockService.releaseReservedStock(pendingOrder);
+                }
+
+            } else {
+
+                // ========================================================
+                // CASE 2: CART KHÔNG THAY ĐỔI
+                // ========================================================
+
+                Payment pendingPayment = paymentRepository
+                        .findFirstByOrderAndStatusOrderByCreatedAtDesc(
+                                pendingOrder,
+                                PaymentStatusCode.PENDING
                         )
-                );
-            }
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        ErrorCode.PAYMENT_NOT_FOUND
+                                )
+                        );
 
+                LocalDateTime now = LocalDateTime.now();
 
-            // --------------------------------------------------------
-            // 3.1.2. PAYMENT EXPIRED
-            //       支払い有効期限切れ
-            //
-            //       Payment cũ không thể tiếp tục sử dụng
-            //       → FAILED
-            //       → Tạo Payment mới
-            // --------------------------------------------------------
+                //expiredAt >= now → còn hạn
 
-            //expiredAt < now → hết hạn
+                if (pendingPayment.getExpiredAt().isAfter(now)
+                        || pendingPayment.getExpiredAt().isEqual(now)) {
 
-            if (pendingPayment.getExpiredAt().isBefore(now)) {
+                    // Payment vẫn còn hạn
+                    String paymentUrl = vnPayUtil.buildPaymentUrl(
+                            pendingPayment.getAmount(),
+                            pendingPayment.getTxnRef(),
+                            request
+                    );
 
-                // Đánh dấu Payment cũ đã hết hạn
-                // 期限切れPaymentをFAILEDに変更
-                pendingPayment.setStatus(PaymentStatusCode.FAILED);
+                    return CheckoutMapper.toDTO(
+                            pendingOrder,
+                            PaymentMapper.toDTO(
+                                    pendingPayment,
+                                    paymentUrl
+                            )
+                    );
+                }
 
-                // Lưu trạng thái Payment mới vào database
-                paymentRepository.save(pendingPayment);
+                // --------------------------------------------------------
+                // 3.1.2. PAYMENT EXPIRED
+                //       支払い有効期限切れ
+                //
+                //       Payment cũ không thể tiếp tục sử dụng
+                //       → FAILED
+                //       → Tạo Payment mới
+                // --------------------------------------------------------
 
-                // Tạo Payment mới cho Order PENDING hiện tại
-                // 新しいPaymentを作成
-                PaymentDTO paymentDTO = paymentService.createPaymentUrl(
-                        pendingOrder.getId(),
-                        request
-                );
+                //expiredAt < now → hết hạn
 
-                return CheckoutMapper.toDTO(
-                        pendingOrder,
-                        paymentDTO
-                );
+                if (pendingPayment.getExpiredAt().isBefore(now)) {
+
+                    // Đánh dấu Payment cũ đã hết hạn
+                    // 期限切れPaymentをFAILEDに変更
+                    pendingPayment.setStatus(PaymentStatusCode.FAILED);
+
+                    // Lưu trạng thái Payment mới vào database
+                    paymentRepository.save(pendingPayment);
+
+                    // Tạo Payment mới cho Order PENDING hiện tại
+                    // 新しいPaymentを作成
+                    PaymentDTO paymentDTO = paymentService.createPaymentUrl(
+                            pendingOrder.getId(),
+                            request
+                    );
+
+                    return CheckoutMapper.toDTO(
+                            pendingOrder,
+                            paymentDTO
+                    );
+                }
             }
         }
 
@@ -479,7 +508,6 @@ public class OrderService {
     }
 
 
-
     //@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     // orphanRemoval有効
 
@@ -564,9 +592,6 @@ public class OrderService {
         // データ整合性維持
         order.removeItem(item);
     }
-
-
-
 
 
     public void paidOrder(Long orderId) {
@@ -729,6 +754,52 @@ public class OrderService {
             OrderStatusCode.CANCELLED,
             Set.of()
     );
+
+
+    // Kiểm tra Cart hiện tại có giống với Order đang PENDING hay không
+    private boolean isCartSameAsOrder(
+            Cart cart,
+            Order order
+    ) {
+
+        // Nếu số lượng sản phẩm trong Cart và Order khác nhau
+        // thì chắc chắn Cart đã thay đổi
+        if (cart.getCartItems().size() != order.getOrderItems().size()) {
+            return false;
+        }
+
+        // Duyệt qua từng sản phẩm trong Cart hiện tại
+        for (CartItem cartItem : cart.getCartItems()) {
+
+            // Tìm xem sản phẩm hiện tại của Cart
+            // có tồn tại trong Order hay không
+            // và số lượng có giống nhau hay không
+            boolean found = order.getOrderItems()
+                    .stream()
+                    .anyMatch(orderItem ->
+
+                            // Kiểm tra cùng Product
+                            orderItem.getProduct().getId()
+                                    .equals(cartItem.getProduct().getId())
+
+                                    &&
+
+                                    // Kiểm tra cùng Quantity
+                                    orderItem.getQuantity()
+                                            .equals(cartItem.getQuantity())
+                    );
+
+            // Nếu không tìm thấy sản phẩm tương ứng trong Order
+            // nghĩa là Cart đã thay đổi
+            if (!found) {
+                return false;
+            }
+        }
+
+        // Tất cả sản phẩm và số lượng đều giống nhau
+        // => Cart hiện tại giống Order
+        return true;
+    }
 
 
 }

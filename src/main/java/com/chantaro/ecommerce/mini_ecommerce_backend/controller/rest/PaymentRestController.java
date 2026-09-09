@@ -23,34 +23,38 @@ public class PaymentRestController {
 
     }
 
-    @GetMapping("/return")
-    public String vnPayReturn(
-            @RequestParam Map<String, String> params
-    ) {
 
-        System.out.println("===== VNPay RETURN =====");
+    //Tạm thời không dùng vì returnUrl: https://mini-ecommerce-backend-production-69d1.up.railway.app/payment-result
+    //đã redirect trực tiếp về payment-result.html có js gọi về api/payment/txnref để authentication token và check payment.status rồi
 
-        params.forEach((key, value) ->
-                System.out.println(key + " = " + value)
-        );
-
-
-        // Kiểm tra chữ ký VNPay
-        if (!paymentService.verify(params)) {
-
-            return "Invalid VNPay signature";
-        }
-
-
-        // Kiểm tra kết quả thanh toán
-        if ("00".equals(params.get("vnp_ResponseCode"))) {
-
-            return "Payment success";
-        }
-
-
-        return "Payment failed";
-    }
+//    @GetMapping("/return")
+//    public String vnPayReturn(
+//            @RequestParam Map<String, String> params
+//    ) {
+//
+//        System.out.println("===== VNPay RETURN =====");
+//
+//        params.forEach((key, value) ->
+//                System.out.println(key + " = " + value)
+//        );
+//
+//
+//        // Kiểm tra chữ ký VNPay
+//        if (!paymentService.verify(params)) {
+//
+//            return "Invalid VNPay signature";
+//        }
+//
+//
+//        // Kiểm tra kết quả thanh toán
+//        if ("00".equals(params.get("vnp_ResponseCode"))) {
+//
+//            return "Payment success";
+//        }
+//
+//
+//        return "Payment failed";
+//    }
 
     // VNPay server callback
     @GetMapping("/ipn")

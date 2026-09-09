@@ -61,56 +61,6 @@ public class StockService {
         }
     }
 
-    // RESERVE STOCK WITH RETRY
-    // 楽観ロック失敗時のリトライ処理
-    @Transactional
-    public void reserveStockWithRetry(Order order) {
-
-        int maxRetry = 3;
-        int attempt = 0;
-
-        while (attempt < maxRetry) {
-
-            try {
-
-                // Thực hiện giữ stock
-                // 在庫確保
-                reserveStock(order);
-
-                // Thành công → kết thúc
-                return;
-
-            } catch (ObjectOptimisticLockingFailureException e) {
-
-                // Optimistic Lock thất bại
-                // 楽観ロック失敗
-                attempt++;
-
-                // Đã retry đủ số lần
-                if (attempt >= maxRetry) {
-
-                    throw new BusinessException(
-                            ErrorCode.SYSTEM_BUSY
-                    );
-                }
-
-                try {
-
-                    // Chờ 100ms trước khi retry
-                    Thread.sleep(100);
-
-                } catch (InterruptedException ex) {
-
-                    // Giữ lại trạng thái interrupt của thread
-                    Thread.currentThread().interrupt();
-
-                    throw new BusinessException(
-                            ErrorCode.SYSTEM_BUSY
-                    );
-                }
-            }
-        }
-    }
 
 
     // CONFIRM RESERVED STOCK
