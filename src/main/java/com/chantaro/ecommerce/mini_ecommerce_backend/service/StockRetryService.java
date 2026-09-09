@@ -120,4 +120,47 @@ public class StockRetryService {
             }
         }
     }
+
+
+    // =====================================================
+    // RELEASE STOCK WITH RETRY
+    // VNPay FAIL → giải phóng reserved stock đang giữ, có nghĩa là trừ đi reserved stock để phục hôì tồn kho
+    // =====================================================
+    public void releaseStockWithRetry(Order order) {
+
+        int maxRetry = 3;
+        int attempt = 0;
+
+        while (attempt < maxRetry) {
+
+            try {
+
+                stockService.releaseReservedStock(order);
+
+                return;
+
+            } catch (ObjectOptimisticLockingFailureException e) {
+
+                attempt++;
+
+                if (attempt >= maxRetry) {
+                    throw new BusinessException(
+                            ErrorCode.SYSTEM_BUSY
+                    );
+                }
+
+                try {
+                    Thread.sleep(100);
+
+                } catch (InterruptedException ex) {
+
+                    Thread.currentThread().interrupt();
+
+                    throw new BusinessException(
+                            ErrorCode.SYSTEM_BUSY
+                    );
+                }
+            }
+        }
+    }
 }

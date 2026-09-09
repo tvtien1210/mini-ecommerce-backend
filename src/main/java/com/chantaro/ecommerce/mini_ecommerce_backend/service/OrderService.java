@@ -43,7 +43,6 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final StockRetryService stockRetryService;
-    private final StockService stockService;
     private final VNPayUtil vnPayUtil;
 
 
@@ -191,7 +190,7 @@ public class OrderService {
                     orderRepository.save(pendingOrder);
 
                     // Release lại số stock đã reserve cho Order cũ
-                    stockService.releaseReservedStock(pendingOrder);
+                    stockRetryService.releaseStockWithRetry(pendingOrder);
                 }
 
             } else {

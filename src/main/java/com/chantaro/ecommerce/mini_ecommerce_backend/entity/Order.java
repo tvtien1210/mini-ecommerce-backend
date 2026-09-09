@@ -34,7 +34,11 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false) // khóa ngoại
     private User user;
 
-    @OneToOne
+
+    //mỗi Order có thể liên kết với một Cart.
+    //một cart đang tạo order của user A, nhưng sau khi checkout không thanh toán, trở lại cart xoá sp cũ , thêm sp mới,
+    //lúc này cart tạo thêm một order database mới trên chính cart_id đó
+    @ManyToOne
     @JoinColumn(name = "cart_id")
     private Cart cart;
 
