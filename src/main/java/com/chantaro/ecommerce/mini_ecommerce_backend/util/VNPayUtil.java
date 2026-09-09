@@ -306,15 +306,18 @@ public class VNPayUtil {
         return expireDate;
     }
 
-    private String getIpAddress(
-            HttpServletRequest request
-    ) {
-        String ip = request.getHeader("X-FORWARDED-FOR");
+    private String getIpAddress(HttpServletRequest request) {
 
-        if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddr();
+        // Lấy IP từ proxy/load balancer
+        String ip = request.getHeader("X-Forwarded-For");
+
+        // Nếu có nhiều IP thì lấy IP đầu tiên
+        if (ip != null && !ip.isEmpty()) {
+            return ip.split(",")[0].trim();
         }
-        return ip;
+
+        // Nếu không có header thì lấy IP trực tiếp
+        return request.getRemoteAddr();
     }
 }
 
