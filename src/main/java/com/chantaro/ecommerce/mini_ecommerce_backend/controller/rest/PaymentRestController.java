@@ -61,6 +61,7 @@ public class PaymentRestController {
         return "OK";
     }
 
+    //Find payment with txnRef
     @GetMapping("/{txnRef}")
     public CurrentPaymentDTO getPaymentByTxnRef(@PathVariable String txnRef) {
         return paymentService.getPaymentByTxnRef(txnRef);

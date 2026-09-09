@@ -2,8 +2,8 @@ vnpay:
   tmnCode: ${VNP_TMN_CODE}
   hashSecret: ${VNP_HASH_SECRET}
   url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-  returnUrl: https://cartoon-nail-underfed.ngrok-free.dev/payment-result
-  ipnUrl: https://cartoon-nail-underfed.ngrok-free.dev/api/payment/ipn
+  returnUrl: https://mini-ecommerce-backend-production-69d1.up.railway.app/payment-result
+  ipnUrl: https://mini-ecommerce-backend-production-69d1.up.railway.app/api/payment/ipn
 
 
 
