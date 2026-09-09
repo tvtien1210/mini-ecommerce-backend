@@ -1,157 +1,80 @@
-# Mini E-Commerce Backend System
+# Chantaro Store
 
-E-commerce backend system built with **Java 21 & Spring Boot**.
+A mini e-commerce application built to practice Java backend development with Spring Boot.
 
-Implemented with:
-- RESTful API
-- JWT Authentication
-- Spring Security
-- JPA/Hibernate
-- VNPay Payment Integration
-- Transaction Management
+## Tech Stack
 
+- **Java 21**
+- **Spring Boot**
+- **Spring Data JPA / Hibernate**
+- **Spring Security**
+- **JWT Authentication**
+- **MySQL**
+- **REST API**
+- **Thymeleaf / Bootstrap / JavaScript**
+- **Maven**
+- **Docker**
+- **Railway**
+- **VNPay Sandbox**
 
-## 🚀 Features
+## Backend
 
-- User registration & login
-- JWT authentication & authorization
-- Product management
-- Shopping cart
-- Order management
-- VNPay payment integration
-- Stock reservation handling
-- Global exception handling
+- Layered architecture: Controller → Service → Repository
+- Entity / DTO / Mapper separation
+- Global exception handling with custom business errors
+- Authentication and authorization with Spring Security and JWT
+- HttpOnly Cookie-based authentication with access/refresh tokens
+- JPA relationships and transaction management
+- Environment variables for sensitive configuration
+- REST API documented with Swagger / OpenAPI
 
+## Business Logic
 
-## 🛠 Tech Stack
+### Cart & Order
 
-Backend:
-- Java 21
-- Spring Boot
-- Spring Security
-- Spring Data JPA
-- Hibernate
+- One user can have an active cart.
+- Before creating a new order, the system compares the current cart with the existing pending order.
+- If changes are detected, it generates a new pending order; if not, it reuses the existing one.
+- Product stock is reserved during checkout and released when payment fails or expires.
+- Cart is marked as `CHECKED_OUT` only after successful payment.
 
-Database:
-- MySQL
+### VNPay Payment
 
-Tools:
-- Maven
-- Git
-- IntelliJ IDEA
+Payment flow:
 
-
-## 🏗 Architecture
-
-```
-Controller
-    ↓
-Service
-    ↓
-Repository
-    ↓
-Database
-```
-
-
-## 🔐 Security
-
-- JWT based authentication
-- BCrypt password encryption
-- Role based authorization
-
-
-## 💳 Payment Flow
-
-```
-Order
- ↓
-Payment
- ↓
+```text
+Checkout
+   ↓
+Create / Reuse Pending Order
+   ↓
+Create Payment
+   ↓
 VNPay
- ↓
-IPN Callback
- ↓
-Update Status
+   ↓
+VNPay IPN
+   ↓
+Verify Signature & Amount
+   ↓
+Update Payment / Order
+   ↓
+PAID
 ```
 
-
-Implemented:
-- HMAC SHA512 verification
-- Amount validation
-- Idempotent callback handling
+The application uses VNPay IPN as the server-side source for updating payment status.
 
 
-## 🗄 Database
+## Deployment
 
-Main entities:
+- Docker image for application deployment
+- Railway for cloud deployment
+- Configuration managed through environment variables
+- `develop` branch for testing
+- `main` branch for production
 
-- User
-- Role
-- Product
-- Category
-- Cart
-- Order
-- Payment
+## Project
 
+**GitHub:** [Chantaro Store](https://github.com/tvtien1210/mini-ecommerce-backend)
 
-Relationship:
+**Live Demo:** [Chantaro Store](https://mini-ecommerce-backend-production-69d1.up.railway.app/)
 
-```
-User
- ├── Cart
- ├── Orders
- └── Roles
-
-Order
- ├── OrderItems
- └── Payment
-```
-
-
-## ⚙️ Setup
-
-Clone:
-
-```bash
-git clone https://github.com/tvtien1210/mini-ecommerce-backend.git
-```
-
-
-Configure:
-
-```properties
-spring.datasource.url=
-spring.datasource.username=
-spring.datasource.password=
-
-jwt.secret=
-
-vnp.tmn-code=
-vnp.hash-secret=
-```
-
-
-Run:
-
-```bash
-./mvnw spring-boot:run
-```
-
-
-## 📌 Future Improvements
-
-- React frontend
-- Docker deployment
-- CI/CD
-- Cloud deployment
-
-
-## 👨‍💻 Author
-
-Chan Taro
-
-## GitHub
-
-- Profile: [https://github.com/tvtien1210](https://github.com/tvtien1210)
-- Repository: [mini-ecommerce-backend](https://github.com/tvtien1210/mini-ecommerce-backend)
+> This project is a personal learning project focused on understanding how a Java/Spring Boot backend works in a real application, from authentication and database design to order processing, payment integration, and deployment.
