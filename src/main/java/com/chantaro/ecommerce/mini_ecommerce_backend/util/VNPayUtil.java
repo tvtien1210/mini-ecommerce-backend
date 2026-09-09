@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -20,10 +22,11 @@ import java.util.*;
 public class VNPayUtil {
 
     private final VNPayConfig vnPayConfig;
+
     // =========================
     // 1. CREATE PAYMENT URL
     // =========================
-    public String buildPaymentUrl(BigDecimal newAmount , String newTxnRef, HttpServletRequest request) {
+    public String buildPaymentUrl(BigDecimal newAmount, String newTxnRef, HttpServletRequest request) {
 
         System.out.println("===== BUILD VNPay URL START =====");
 
@@ -280,18 +283,27 @@ public class VNPayUtil {
     // =========================
     // 5. TIME FORMAT VNPay
     // =========================
+
+
+    //Japan Time
+    ZoneId zoneId = ZoneId.of("Asia/Tokyo");
+
+    ZonedDateTime now = ZonedDateTime.now(zoneId);
+
     private String getCurrentTime() {
-
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-
-        return LocalDateTime.now().format(formatter);
+        //Create Date = current time
+        String createDate =
+                now.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        return createDate;
     }
 
     private String getExpireTime() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-        return LocalDateTime.now().plusMinutes(15).format(formatter);
+
+        String expireDate =
+                now.plusMinutes(15)
+                        .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        return expireDate;
     }
 
     private String getIpAddress(
