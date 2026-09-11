@@ -281,7 +281,7 @@ function renderCheckoutSubtotal(cart) {
 
 
 // ==================================================
-// TAX
+// TAX : d-none is setting, under coding
 // ==================================================
 
 function renderCheckoutTax(cart) {
@@ -292,8 +292,7 @@ function renderCheckoutTax(cart) {
             calculateSubtotal(cart);
 
 
-        const tax =
-            subTotal * 0.1;
+        const tax =  0;
 
 
         checkoutTaxElement.innerHTML =
@@ -326,8 +325,10 @@ function renderCheckoutTotal(cart) {
             calculateSubtotal(cart);
 
 
-        const tax =
-            subTotal * 0.1;
+//        const tax =
+//            subTotal * 0.1;
+
+        const tax = 0;
 
 
         const total =
