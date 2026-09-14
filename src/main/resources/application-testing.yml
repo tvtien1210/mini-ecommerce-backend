@@ -1,9 +1,9 @@
 vnpay:
-  tmnCode: ${VNP_TMN_CODE}
-  hashSecret: ${VNP_HASH_SECRET}
+  tmnCode: ${VNP_TMN_CODE_TESTING}
+  hashSecret: ${VNP_HASH_SECRET_TESTING}
   url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-  returnUrl: https://https://mini-ecommerce-backend-testing.up.railway.app/payment-result
-  ipnUrl: https://https://mini-ecommerce-backend-testing.up.railway.app/api/payment/ipn
+  returnUrl: https://mini-ecommerce-backend-testing.up.railway.app/payment-result
+  ipnUrl: https://mini-ecommerce-backend-testing.up.railway.app/api/payment/ipn
 
 
 
@@ -13,5 +13,5 @@ vnpay:
   #// -verify token khi client gui lên
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET_TESTING}
 
