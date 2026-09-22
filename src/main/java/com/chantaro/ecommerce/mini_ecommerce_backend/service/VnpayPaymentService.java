@@ -1,6 +1,5 @@
 package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
-import com.chantaro.ecommerce.mini_ecommerce_backend.dto.order.OrderDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.CurrentPaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.payment.PaymentDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.*;
@@ -28,7 +27,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 //Không phải tạo Constructor (DI) thủ công
 // コンストラクタを手動作成せずにDIを行う
-public class PaymentServiceImpl implements PaymentService {
+public class VnpayPaymentService implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
@@ -192,18 +191,13 @@ public class PaymentServiceImpl implements PaymentService {
             // 1つのorderに複数回の決済試行が存在可能
             Order order = payment.getOrder();
 
-            // Nếu order đã PAID rồi thì "bỏ qua" --> vì có trường hợp khách expired nhưng khách hàng bấm thanh toán lại luôn, và status thành công trả về Paid
-            // Lúc PAID mà không check if PAID, không continue, thì code sẽ chạy tiếp phần releaseServerdStock, gây sai database
-            // Tránh trường hợp:
-            // - payment cũ bị expired
-            // - nhưng payment retry mới đã thanh toán thành công
-            // => không được overwrite order thành failed/cancelled
-            //
-            // orderが既にPAIDならスキップ
-            // 古い決済はexpiredでも、
-            // リトライ決済が成功している可能性があるため
-            // 状態を上書きしない
-            if (order.getStatus() == OrderStatusCode.PAID) {
+
+
+            // continue: chương trình sẽ bỏ qua ngay lập tức tất cả các câu lệnh phía dưới nó và lập tức chuyển sang lượt lặp tiếp theo của vòng lặp
+            // Chỉ xử lý những đơn hàng đang ở trạng thái PENDING.
+            // Nếu đơn hàng đã PAID (do IPN về trước) hoặc đã CANCELLED/EXPIRED, ta dùng 'continue' để bỏ qua đơn này và chuyển sang quét đơn tiếp theo.
+            // Không đè trạng thái EXPIRED lên đơn đã thanh toán thành công.
+            if (order.getStatus() != OrderStatusCode.PENDING) {
                 continue;
             }
 
@@ -218,7 +212,7 @@ public class PaymentServiceImpl implements PaymentService {
             // - 予約在庫解放
             // - 通知送信など
 
-            payment.setStatus(PaymentStatusCode.FAILED);
+            payment.setStatus(PaymentStatusCode.EXPIRED);
             order.setStatus(OrderStatusCode.CANCELLED);
             stockService.releaseReservedStock(order);
 
@@ -232,7 +226,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public CurrentPaymentDTO getPaymentByTxnRef(String txnRef) {
-        Payment payment = paymentRepository.findByTxnRef(txnRef).orElseThrow(()->new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+        Payment payment = paymentRepository.findByTxnRef(txnRef).orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
         Order order = payment.getOrder();
         return PaymentMapper.currentPaymentDTO(payment, OrderMapper.toDTO(order));
     }

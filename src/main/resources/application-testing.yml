@@ -2,6 +2,15 @@ vnpay:
   tmnCode: ${VNP_TMN_CODE_TESTING}
   hashSecret: ${VNP_HASH_SECRET_TESTING}
   url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+
+#  //can co ngrok de test truoc
+#  //link that da duoc set variable tren railway my sql test
+#  returnUrl: https://cartoon-nail-underfed.ngrok-free.dev/payment-result
+#  ipnUrl: https://cartoon-nail-underfed.ngrok-free.dev/api/payment/ipn
+
+
+#  nho thay bang link ben duoi truoc khi git push origin develop
+#  nho thay doi ipn url tren vnpay sanbox
   returnUrl: https://mini-ecommerce-backend-testing.up.railway.app/payment-result
   ipnUrl: https://mini-ecommerce-backend-testing.up.railway.app/api/payment/ipn
 

@@ -41,10 +41,7 @@ public class OrderRestController {
     // }
 
     @PostMapping("/checkout")
-    public CheckoutDTO checkout(
-            HttpServletRequest request
-    ) {
-
+    public CheckoutDTO checkout(HttpServletRequest request) {
         return orderService.checkoutOrder(request);
     }
 

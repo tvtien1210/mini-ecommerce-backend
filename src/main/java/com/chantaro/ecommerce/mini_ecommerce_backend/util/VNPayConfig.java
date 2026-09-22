@@ -1,4 +1,4 @@
-package com.chantaro.ecommerce.mini_ecommerce_backend.security.config;
+package com.chantaro.ecommerce.mini_ecommerce_backend.util;
 
 import lombok.Getter;
 import lombok.Setter;

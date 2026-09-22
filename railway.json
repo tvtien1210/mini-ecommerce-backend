@@ -1,0 +1,12 @@
+
+{
+  "$schema": "https://railway.app",
+  "deploy": {
+    "numReplicas": 1,
+    "restartPolicyOnFailure": "ON_FAILURE"
+  },
+  "service": {
+    "cpu": 0.25,
+    "memory": 350
+  }
+}

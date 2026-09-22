@@ -21,10 +21,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByOrderId(Long orderId);
 
     // dùng cho cron job (tác vụ theo lịch trình): tìm payment hết hạn
-    List<Payment> findByStatusAndExpiredAtBefore(
-            PaymentStatusCode status,
-            LocalDateTime time
-    );
+    List<Payment> findByStatusAndExpiredAtBefore(PaymentStatusCode status, LocalDateTime time);
 
     // check duplicate (idempotent nâng cao)
     boolean existsByTxnRef(String txnRef);
