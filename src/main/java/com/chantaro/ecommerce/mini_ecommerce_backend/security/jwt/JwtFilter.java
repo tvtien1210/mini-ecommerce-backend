@@ -50,8 +50,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 || path.equals("/payment-result")
                 || path.equals("/myorders")
                 //API
-                || path.equals("/api/products")
-                || path.equals("/api/products/search")
                 || path.equals("/api/payment/ipn")
                 || path.equals("/api/payment/return")
                 || path.equals("/api/auth/login")
