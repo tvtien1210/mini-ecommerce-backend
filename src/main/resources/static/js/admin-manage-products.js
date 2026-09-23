@@ -537,7 +537,7 @@ productFormElement.addEventListener("submit", async function(event) {
                 response.statusText
             );
 
-            showToast("Product added successfully.", "success");
+            showToast("Failed to add product.", "danger");
             return;
         }
 
@@ -587,10 +587,9 @@ productFormElement.addEventListener("submit", async function(event) {
         // CLOSE MODAL
         // =========================
 
-        const modal =
-            bootstrap.Modal.getOrCreateInstance(productModalElement);
+        const modal = bootstrap.Modal.getOrCreateInstance(productModalElement);
 
-        modal.hide();
+        modal?.hide();
 
     } catch (error) {
 
@@ -618,7 +617,7 @@ window.openAddProductModal = function(){
     productIdInput.value = "";
 
     //Lay hoac tao bootstrap modal instance
-    const modal = bootstrap.Modal.getOrCreateInstance(productModal);
+    const modal = bootstrap.Modal.getOrCreateInstance(productModalElement);
 
     //Hien thi Modal
     modal.show();
