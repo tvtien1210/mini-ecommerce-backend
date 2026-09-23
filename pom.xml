@@ -169,6 +169,14 @@
 		</dependency>
 
 
+		<!-- POSTGRESQL : chuyển từ database cũ sang PostgreSQL, nên cần thêm driver -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
