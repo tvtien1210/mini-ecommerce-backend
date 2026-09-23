@@ -2,11 +2,14 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.controller.rest;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.CreateProductRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.ProductDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.ProductPageDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,10 +20,16 @@ import java.util.List;
 public class ProductRestController {
     private final ProductService productService;
 
-    //GET ALL PRODUCTS
+    //GET PRODUCTS BY KEYWORD or GET ALL PRODUCTS
     @GetMapping
-    public List<ProductDTO> getAllProducts() {
-        return productService.getAllProducts();
+    public ResponseEntity<ProductPageDTO> getProductsPage(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                productService.getProducts(keyword,page, size)
+        );
     }
 
     //GET PRODUCT BY ID
@@ -47,5 +56,7 @@ public class ProductRestController {
         productService.deleteProduct(productId);
         return "Deleted product by id = " + productId;
     }
+
+
 
 }

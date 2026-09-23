@@ -78,10 +78,32 @@ const toastElement = document.getElementById("toast");
 // Element chứa nội dung thông báo Toast
 const toastMessageElement = document.getElementById("toastMessage");
 
+//PAGINATION
+const paginationElement = document.getElementById("pagination");
 
-// DATA
+//SEARCH KEYWORD
+const searchKeywordElement = document.getElementById("search-keyword");
 
-// Lưu danh sách Product hiện tại lấy từ Backend
+//SEARCH BUTTON
+const searchButtonElement = document.getElementById("search-button");
+
+
+
+//INITIAL LOAD
+
+//function nay de load du lieu tu backend ve frontend de bind vao html
+document.addEventListener("DOMContentLoaded", async function (){
+
+    //loadCategories() phải chạy trước khi openEditProductModal() được gọi
+    await loadCategories();
+    //load products
+    await loadProducts();
+    //setup Pagination Events
+    setupPaginationEvents();
+
+});
+
+// Lưu danh sách Product array hiện tại lấy từ Backend, de lat nua dung products.map()
 // VARIABLES
 let currentProducts = [];
 
@@ -118,11 +140,19 @@ async function loadCategories() {
 //Function  này có công việc bất đồng bộ async, tra ve tung ket qua mot, tranh bi block trinh duyet do load cung luc
 //loadCategories() và loadProducts()  cũng nên có try catch
 
-async function loadProducts() {
+async function loadProducts(page=0, keyword="", size = 10) {
 
     try {
 
-        const response = await apiFetch("/api/products");
+         // URL mặc định
+         let url =`/api/products?page=${page}&size=${size}`;
+
+         // Nếu có keyword thì thêm keyword
+         if (keyword) {
+             url += `&keyword=${encodeURIComponent(keyword)}`;
+         }
+
+         const response = await apiFetch(url);
 
         if (!response.ok) {
             console.error(
@@ -133,12 +163,17 @@ async function loadProducts() {
             return;
         }
 
-        const products = await response.json();
+        const productPage = await response.json();
 
-        currentProducts = products;
+        currentProducts = productPage.products;
 
-        renderDesktopProducts(products);
-        renderMobileProducts(products);
+        renderDesktopProducts(currentProducts);
+
+        renderMobileProducts(currentProducts);
+
+        renderPagination(productPage.currentPage,productPage.totalPages);
+
+
 
     } catch (error) {
 
@@ -438,6 +473,18 @@ function renderDesktopProducts(products){
         })
      })
 }
+
+
+//SEARCH BUTTON EVENT
+
+searchButtonElement.addEventListener("click",function(){
+
+    //trim() xử lý khoảng trắng đầu/cuối, còn encodeURIComponent() sẽ xử lý cả khoảng trắng ở giữa khi đưa vào URL.
+    const keyword = searchKeywordElement.value.trim();
+
+    loadProducts(0,keyword);
+
+});
 
 
 //ADD OR EDIT PRODUCT FORM KHI AN SUBMIT
@@ -814,6 +861,144 @@ function getStockBadge(stock) {
     `;
 }
 
+
+//RENDER PAGINATION
+
+function renderPagination(
+    currentPage, // Trang hiện tại, bắt đầu từ 0
+    totalPages   // Tổng số trang
+) {
+
+    // Xóa pagination cũ trước khi render lại
+    paginationElement.innerHTML = "";
+
+    // Nếu chỉ có 1 trang hoặc không có trang nào
+    // thì không cần hiển thị pagination
+    if (totalPages <= 1) {
+        return;
+    }
+
+
+    // ==================================================
+    // Previous button
+    // ==================================================
+
+    paginationElement.innerHTML += `
+        <li class="page-item
+            ${currentPage === 0 ? "disabled" : ""}">
+
+            <button
+                class="page-link"
+                data-page="${currentPage - 1}">
+
+                Previous
+
+            </button>
+
+        </li>
+    `;
+
+    // Nếu đang ở trang đầu tiên (page = 0)
+    // thì Previous sẽ bị disabled
+    //
+    // Ví dụ:
+    // currentPage = 0
+    // → data-page = -1
+    // → nhưng button bị disabled nên không thể click
+
+
+    // ==================================================
+    // Page numbers
+    // ==================================================
+
+    // Duyệt qua tất cả các trang
+    //
+    // page = 0 → trang 1
+    // page = 1 → trang 2
+    // page = 2 → trang 3
+    //
+    // Backend cũng sử dụng page bắt đầu từ 0
+    for (
+        let page = 0;
+        page < totalPages;
+        page++
+    ) {
+
+        paginationElement.innerHTML += `
+
+            <li class="page-item
+                ${page === currentPage ? "active" : ""}">
+
+                <button
+                    class="page-link"
+                    data-page="${page}">
+
+                    ${page + 1}
+
+                </button>
+
+            </li>
+        `;
+    }
+
+    // page dùng giá trị bắt đầu từ 0
+    // nhưng người dùng nhìn thấy số bắt đầu từ 1
+    //
+    // page = 0 → hiển thị "1"
+    // page = 1 → hiển thị "2"
+    // page = 2 → hiển thị "3"
+
+
+    // ==================================================
+    // Next button
+    // ==================================================
+
+    paginationElement.innerHTML += `
+
+        <li class="page-item
+            ${currentPage === totalPages - 1
+                ? "disabled"
+                : ""}">
+
+            <button
+                class="page-link"
+                data-page="${currentPage + 1}">
+
+                Next
+
+            </button>
+
+        </li>
+    `;
+
+    // Nếu đang ở trang cuối:
+    //
+    // currentPage === totalPages - 1
+    //
+    // thì Next sẽ bị disabled.
+}
+
+// PANIGATION EVENTS
+function setupPaginationEvents(){
+
+    paginationElement.addEventListener("click",function(event){
+
+        const button = event.target.closest(".page-link");
+
+        if(!button){return;}
+
+        const page = Number(button.dataset.page);
+
+        const keyword = searchKeywordElement.value.trim();
+
+        if(page<0){return;}
+
+        loadProducts(page,keyword)
+
+    })
+
+}
+
 //FUNCTION SHOW TOAST
 
 //Hien thi Toast voi noi dung message duoc truyen vao
@@ -863,14 +1048,6 @@ function showToast(message, type = "success") {
     toast.show();
 }
 
-//INITIAL LOAD
 
-//function nay de load du lieu tu backend ve frontend de bind vao html
-document.addEventListener("DOMContentLoaded", async function (){
-    //loadCategories() phải chạy trước khi openEditProductModal() được gọi
-    await loadCategories();
-    await loadProducts();
-
-});
 
 

@@ -18,9 +18,7 @@ public class PaymentExpirationScheduler {
     @Scheduled(fixedDelay = 60_000)
     public void handleExpiredPayments() {
 
-        System.out.println(
-                "PaymentExpirationScheduler is running..."
-        );
+        System.out.println("PaymentExpirationScheduler is running..." );
 
         // 期限切れ決済を処理
         // Gọi PaymentService để tìm và xử lý các payment đã hết hạn qua handleExpiredPayments()

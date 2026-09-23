@@ -382,6 +382,91 @@
 
         </div>
 
+        <!-- ==============================
+         SEARCH + SORT
+    ================================== -->
+
+        <div class="row g-3 mb-4">
+
+
+            <!-- Search -->
+
+            <div class="col-12 col-lg-8">
+
+                <div class="input-group">
+
+
+                <span class="input-group-text bg-dark border-secondary text-secondary">
+
+                    <i class="bi bi-search"></i>
+
+                </span>
+
+
+                    <input
+                            id="search-keyword"
+                            type="text"
+                            class="form-control bg-dark text-light border-secondary"
+                            placeholder="Search products...">
+
+
+                    <button
+                            id="search-button"
+                            class="btn btn-primary"
+                            type="button">
+
+                        Search
+
+                    </button>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- Sort -->
+
+            <div class="col-12 col-lg-4">
+
+                <select
+                        class="form-select bg-dark text-light border-secondary">
+
+                    <option value="">
+
+                        Sort by: Latest
+
+                    </option>
+
+
+                    <option value="price-asc">
+
+                        Price: Low to High
+
+                    </option>
+
+
+                    <option value="price-desc">
+
+                        Price: High to Low
+
+                    </option>
+
+
+                    <option value="name">
+
+                        Name: A-Z
+
+                    </option>
+
+
+                </select>
+
+            </div>
+
+
+        </div>
+
 
         <!-- ADD PRODUCT -->
 
@@ -1039,6 +1124,18 @@
 
 
 </div>
+
+<!-- ==============================
+        PAGINATION
+   ================================== -->
+
+<!--    Pagination : chi hien thi khi co nhieu hon mot trang-->
+<nav>
+    <ul
+            id="pagination"
+            class="pagination justify-content-center">
+    </ul>
+</nav>
 
 
 <!-- =========================================================

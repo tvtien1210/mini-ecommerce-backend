@@ -45,17 +45,17 @@ public class JwtFilter extends OncePerRequestFilter {
                 || path.startsWith("/register") //startsWith : phải bắt đầu bằng
                 || path.equals("/api/auth/refresh")
                 || path.equals("/categories")
-                || path.equals("/product")
+                || path.equals("/products")
                 || path.equals("/cart")
                 || path.equals("/payment-result")
                 || path.equals("/myorders")
                 //API
+                || path.equals("/api/products")
+                || path.equals("/api/products/search")
                 || path.equals("/api/payment/ipn")
                 || path.equals("/api/payment/return")
                 || path.equals("/api/auth/login")
                 || path.equals("/api/auth/register")
-
-
                 // Frontend public files
                 || path.startsWith("/css/")
                 || path.startsWith("/js/")

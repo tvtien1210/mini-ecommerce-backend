@@ -2,16 +2,19 @@ package com.chantaro.ecommerce.mini_ecommerce_backend.service;
 
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.CreateProductRequest;
 import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.ProductDTO;
+import com.chantaro.ecommerce.mini_ecommerce_backend.dto.product.ProductPageDTO;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Category;
 import com.chantaro.ecommerce.mini_ecommerce_backend.entity.Product;
 import com.chantaro.ecommerce.mini_ecommerce_backend.enums.ErrorCode;
 import com.chantaro.ecommerce.mini_ecommerce_backend.exception.BusinessException;
 import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.ProductMapper;
+import com.chantaro.ecommerce.mini_ecommerce_backend.mapper.ProductPageMapper;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CartItemRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.CategoryRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.OrderItemRepository;
 import com.chantaro.ecommerce.mini_ecommerce_backend.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.ManagedTypes;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,11 +31,41 @@ public class ProductService {
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductPageMapper productPageMapper;
 
     //GET ALL PRODUCT
     @Transactional(readOnly = true)
     public List<ProductDTO> getAllProducts() {
         return productRepository.findAll().stream().map(product -> ProductMapper.toDTO(product)).toList();
+    }
+
+    // PAGINATION + SEARCH
+    public ProductPageDTO getProducts(
+            String keyword,
+            int page,
+            int size
+    ) {
+
+        // page: trang hiện tại, bắt đầu từ 0
+        // size: số Product trong một trang
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Product> productPage;
+
+        if (keyword == null || keyword.isBlank()) {
+
+            // Không có keyword → lấy tất cả Product
+            productPage = productRepository.findAll(pageable);
+
+        } else {
+
+            // Có keyword → tìm Product theo name + pagination
+            productPage =productRepository.findByNameContainingIgnoreCase(keyword, pageable);
+
+        }
+
+        // Convert Page<Product> → ProductPageDTO
+        return ProductPageMapper.toDTO(productPage);
     }
 
 
@@ -42,7 +75,6 @@ public class ProductService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
         return ProductMapper.toDTO(product);
     }
-
 
 
     //CREATE PRODUCT
@@ -179,17 +211,6 @@ public class ProductService {
         }
 
         productRepository.delete(product);
-    }
-
-    //PAGINATION
-
-    public Page<Product> getProducts(int page, int size) {
-
-        // Tạo yêu cầu phân trang: page = trang, size = số sản phẩm/trang
-        Pageable pageable = PageRequest.of(page, size);
-
-        // Lấy danh sách Product theo yêu cầu phân trang từ database
-        return productRepository.findAll(pageable);
     }
 
 }

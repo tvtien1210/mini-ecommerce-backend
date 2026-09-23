@@ -180,6 +180,8 @@ public class VnpayPaymentService implements PaymentService {
                         LocalDateTime.now()
                 );
 
+        System.out.println("expiredPayments.size = "+expiredPayments.size());
+
         // Duyệt từng payment hết hạn
         // 期限切れ決済を1件ずつ処理
         for (Payment payment : expiredPayments) {
