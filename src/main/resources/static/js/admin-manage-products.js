@@ -347,6 +347,11 @@ function renderMobileProducts(products){
 //RENDER DESKTOP PRODUCTS
 
 function renderDesktopProducts(products){
+
+    //Xử lý total products của  --PRODUCT RESULT-- <div> trước
+    const totalProductsImplement = document.getElementById(total-products);
+    totalProductsImplement.value=`${productCurrency.size() + ' Products'}`;
+
     if(!products){return}
     if(products.length === 0){
         productTableBodyElement.innerHTML=`
@@ -997,6 +1002,9 @@ function setupPaginationEvents(){
     })
 
 }
+
+
+
 
 //FUNCTION SHOW TOAST
 
