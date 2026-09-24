@@ -167,9 +167,11 @@ async function loadProducts(page=0, keyword="", size = 10) {
 
         currentProducts = productPage.products;
 
-        renderDesktopProducts(currentProducts);
+        totalProducts = productPage.totalProducts;
 
-        renderMobileProducts(currentProducts);
+        renderDesktopProducts(currentProducts, totalProducts);
+
+        renderMobileProducts(currentProducts, totalProducts);
 
         renderPagination(productPage.currentPage,productPage.totalPages);
 
@@ -212,9 +214,11 @@ function renderCategory(categories){
 
 
 //RENDER MOBILE PRODUCTS
-function renderMobileProducts(products){
-    if(!products){return}
-    if(products.length === 0){
+function renderMobileProducts(currentProducts, totalProducts){
+
+
+    if(!currentProducts){return}
+    if(currentProducts.length === 0){
         productMobileListElement.innerHTML=`
         <div>
             No products found.
@@ -223,7 +227,7 @@ function renderMobileProducts(products){
         return;
     }
 
-    productMobileListElement.innerHTML =products.map(product => `
+    productMobileListElement.innerHTML =currentProducts.map(product => `
 
      <!-- PRODUCT MOBILE CARD -->
 
@@ -346,14 +350,12 @@ function renderMobileProducts(products){
 
 //RENDER DESKTOP PRODUCTS
 
-function renderDesktopProducts(products){
+function renderDesktopProducts(currentproducts,totalProducts){
 
-    //Xử lý total products của  --PRODUCT RESULT-- <div> trước
-    const totalProductsImplement = document.getElementById(total-products);
-    totalProductsImplement.value=`${productCurrency.size() + ' Products'}`;
 
-    if(!products){return}
-    if(products.length === 0){
+
+    if(!currentproducts){return}
+    if(currentproducts.length === 0){
         productTableBodyElement.innerHTML=`
         <div>
             <p>"Not found product"</p>
@@ -362,9 +364,10 @@ function renderDesktopProducts(products){
         return;
     }
 
+
     //Lấy mảng products → biến mỗi Product thành một <tr> → ghép tất cả lại → đưa vào <tbody>.
     //product lay ra tu list products tu response cua database
-     productTableBodyElement.innerHTML = products.map(function(product) {
+     productTableBodyElement.innerHTML = currentproducts.map(function(product) {
 
         return `
 

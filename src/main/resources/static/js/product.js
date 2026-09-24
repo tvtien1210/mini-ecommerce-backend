@@ -49,8 +49,12 @@ async function loadProducts( page = 0, keyword = "", size = 10){
             await response.json();
 
         // Lấy danh sách Product của page hiện tại
-        const products =
-            productPage.products;
+        const products = productPage.products;
+
+        // Lay tong products trong database
+        const totalProducts = productPage.totalProducts;
+
+        renderTotalProducts(totalProducts);
 
         renderProducts(products);
 
@@ -63,6 +67,12 @@ async function loadProducts( page = 0, keyword = "", size = 10){
 
         console.error("Failed:", error);
     }
+}
+
+function renderTotalProducts(totalProducts){
+    //Xử lý total products của  --PRODUCT RESULT-- <div> trước
+    const totalProductsImplement = document.getElementById("total-products");
+    totalProductsImplement.textContent=`${totalProducts} Products`;
 }
 
 function renderProducts(products){
