@@ -190,11 +190,12 @@ public class ProductService {
         Category category = categoryRepository.findById(rq.getCategoryId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        product.setName(rq.getName());
-        product.setDescription(rq.getDescription());
-        product.setPrice(rq.getPrice());
-        product.setStock(rq.getStock());
         product.setCategory(category);
+        product.setName(rq.getName());
+        product.setStock(rq.getStock());
+        product.setPrice(rq.getPrice());
+        product.setImageUrl(rq.getImageUrl());
+        product.setDescription(rq.getDescription());
 
         return ProductMapper.toDTO(productRepository.save(product));
     }
