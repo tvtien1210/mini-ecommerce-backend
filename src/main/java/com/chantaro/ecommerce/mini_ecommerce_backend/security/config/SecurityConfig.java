@@ -199,6 +199,12 @@ public class SecurityConfig {
                         // PRODUCT API
                         // =========================================================
 
+
+                        //Page html permit all
+                        .requestMatchers(
+                                "/admin/products"
+                        ).permitAll()
+
                         // View products
                         // CUSTOMER / STAFF / ADMIN / UNAUTHORIZATION: get product
                         .requestMatchers(

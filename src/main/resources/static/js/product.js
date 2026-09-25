@@ -49,14 +49,14 @@ async function loadProducts( page = 0, keyword = "", size = 10){
             await response.json();
 
         // Lấy danh sách Product của page hiện tại
-        const products = productPage.products;
+        const currentProducts = productPage.products;
 
         // Lay tong products trong database
         const totalProducts = productPage.totalProducts;
 
         renderTotalProducts(totalProducts);
 
-        renderProducts(products);
+        renderProducts(currentProducts);
 
         renderPagination(
             productPage.currentPage,
@@ -75,18 +75,18 @@ function renderTotalProducts(totalProducts){
     totalProductsImplement.textContent=`${totalProducts} Products`;
 }
 
-function renderProducts(products){
+function renderProducts(currentProducts){
 
     productContainerElement.innerHTML="";
 
-    if(products.length==0){
+    if(currentProducts.length==0){
         return `
             <div>Not found products</div>
         `
     }
 
 
-    products.forEach(function (product){
+    currentProducts.forEach(function (product){
 
         productContainerElement.innerHTML += `
 
@@ -355,34 +355,20 @@ function setupPaginationEvents(){
 // Đăng ký sự kiện click cho các nút Add to Cart
 function setupAddToCartEvents() {
 
-    // Lấy tất cả button có class "add-to-cart-btn"
-    const addToCartButtons =
-        document.querySelectorAll(".add-to-cart-btn");
+    productContainerElement.addEventListener("click", function (event){
 
+        const button = event.target.closest(".add-to-cart-btn");
 
-    // Duyệt qua từng button
-    addToCartButtons.forEach(function (button) {
+        if(!button){
+        console.log("Not found button");
+        return
+        };
 
-        // Đăng ký sự kiện click
-        button.addEventListener("click", function () {
+        const productId = Number(button.dataset.productId);
 
+        const quantity = 1;
 
-            const productId =
-                Number(button.dataset.productId);
-
-
-            // Mặc định khi User click
-            // sẽ thêm 1 sản phẩm vào Cart
-            const quantity = 1;
-
-
-            // Gọi function addToCart()
-            addToCart(
-                productId,
-                quantity
-            );
-
-        });
+        addToCart(productId,quantity);
 
     });
 
